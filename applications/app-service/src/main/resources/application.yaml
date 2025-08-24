@@ -1,0 +1,51 @@
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /solicitud
+
+spring:
+  application:
+    name: application-service
+  
+  r2dbc:
+    url: r2dbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    pool:
+      initial-size: 5
+      max-size: 20
+      max-idle-time: 30m
+      validation-query: SELECT 1
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,prometheus,info,metrics"
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when-authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200,http://localhost:8080}
+  allowed-context-path: /solicitud
+
+logging:
+  level:
+    com.crediya.auth: ${LOG_LEVEL_CREDIYA:INFO}
+    org.springframework.r2dbc: INFO
+    org.springframework.transaction: INFO
+    io.r2dbc.postgresql: WARN
+    reactor.netty: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION}
