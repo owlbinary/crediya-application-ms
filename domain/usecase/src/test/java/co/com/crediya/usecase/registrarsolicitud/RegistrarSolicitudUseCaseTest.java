@@ -4,7 +4,7 @@ import co.com.crediya.model.EstadoSolicitud;
 import co.com.crediya.model.Solicitud;
 import co.com.crediya.model.exception.DatosInvalidosException;
 import co.com.crediya.model.exception.TipoPrestamoNoExisteException;
-import co.com.crediya.model.gateway.SolicitudRepository;
+import co.com.crediya.model.gateway.SolicitudGateway;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,7 +24,7 @@ import static org.mockito.Mockito.when;
 class RegistrarSolicitudUseCaseTest {
 
     @Mock
-    private SolicitudRepository solicitudRepository;
+    private SolicitudGateway solicitudRepository;
 
     @InjectMocks
     private RegistrarSolicitudUseCase useCase;

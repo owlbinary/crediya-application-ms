@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 @Repository
-public interface SolicitudReactivaRepository extends ReactiveCrudRepository<SolicitudEntity, Integer> {
+public interface SolicitudRepository extends ReactiveCrudRepository<SolicitudEntity, Integer> {
     
     Flux<SolicitudEntity> findByDocumentoIdentidad(String documentoIdentidad);
     

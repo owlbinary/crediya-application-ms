@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
 @Repository
-public interface TipoPrestamoReactivoRepository extends ReactiveCrudRepository<TipoPrestamoEntity, Integer> {
+public interface TipoPrestamoRepository extends ReactiveCrudRepository<TipoPrestamoEntity, Integer> {
     
     @Query("SELECT CASE WHEN COUNT(*) > 0 THEN true ELSE false END FROM tipo_prestamo WHERE id_tipo_prestamo = $1")
     Mono<Boolean> existsByIdCustom(Integer id);

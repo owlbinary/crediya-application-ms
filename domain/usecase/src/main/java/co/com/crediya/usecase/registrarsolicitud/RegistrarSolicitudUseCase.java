@@ -2,7 +2,7 @@ package co.com.crediya.usecase.registrarsolicitud;
 
 import co.com.crediya.model.exception.DatosInvalidosException;
 import co.com.crediya.model.exception.TipoPrestamoNoExisteException;
-import co.com.crediya.model.gateway.SolicitudRepository;
+import co.com.crediya.model.gateway.SolicitudGateway;
 import co.com.crediya.model.Solicitud;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
@@ -16,7 +16,7 @@ import java.math.BigDecimal;
 @RequiredArgsConstructor
 public class RegistrarSolicitudUseCase {
     
-    private final SolicitudRepository solicitudRepository;
+    private final SolicitudGateway solicitudRepository;
     
     /**
      * Ejecuta el proceso de registro de una nueva solicitud.

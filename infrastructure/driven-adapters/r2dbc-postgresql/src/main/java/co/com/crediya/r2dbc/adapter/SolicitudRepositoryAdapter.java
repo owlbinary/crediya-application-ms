@@ -5,10 +5,10 @@ import org.springframework.transaction.reactive.TransactionalOperator;
 
 import co.com.crediya.model.Solicitud;
 import co.com.crediya.model.exception.InfraestructuraException;
-import co.com.crediya.model.gateway.SolicitudRepository;
+import co.com.crediya.model.gateway.SolicitudGateway;
 import co.com.crediya.r2dbc.mapper.SolicitudEntityMapper;
-import co.com.crediya.r2dbc.repository.SolicitudReactivaRepository;
-import co.com.crediya.r2dbc.repository.TipoPrestamoReactivoRepository;
+import co.com.crediya.r2dbc.repository.SolicitudRepository;
+import co.com.crediya.r2dbc.repository.TipoPrestamoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Repository
 @RequiredArgsConstructor
-public class SolicitudRepositoryAdapter implements SolicitudRepository {
+public class SolicitudRepositoryAdapter implements SolicitudGateway {
 
     private static final String MENSAJE_ID_NUMERICO_REQUERIDO = "ID debe ser numérico: {}";
     private static final String MENSAJE_ID_TIPO_PRESTAMO_NUMERICO = "ID de tipo de préstamo debe ser numérico: ";
@@ -33,8 +33,8 @@ public class SolicitudRepositoryAdapter implements SolicitudRepository {
     private static final String MENSAJE_ERROR_VERIFICACION_TIPO = "Error verificando tipo de préstamo {}: {}";
     private static final String MENSAJE_ERROR_CONSULTA_PRINCIPAL = "Error en consulta principal de tipo de préstamo: {}";
 
-    private final SolicitudReactivaRepository solicitudRepository;
-    private final TipoPrestamoReactivoRepository tipoPrestamoRepository;
+    private final SolicitudRepository solicitudRepository;
+    private final TipoPrestamoRepository tipoPrestamoRepository;
     private final SolicitudEntityMapper entityMapper;
     private final TransactionalOperator transactionalOperator;
 
