@@ -90,15 +90,73 @@ class RegistrarSolicitudUseCaseTest {
     }
 
     @Test
+    void deberiaFallarCuandoDocumentoSoloTieneEspacios() {
+        StepVerifier.create(useCase.ejecutar("   ", montoValido, plazoValido, tipoPrestamoValido, "Bearer test-token"))
+            .expectError(DatosInvalidosException.class)
+            .verify();
+    }
+
+    @Test
+    void deberiaFallarCuandoMontoEsNulo() {
+        StepVerifier.create(useCase.ejecutar(documentoValido, null, plazoValido, tipoPrestamoValido, "Bearer test-token"))
+            .expectError(DatosInvalidosException.class)
+            .verify();
+    }
+
+    @Test
     void deberiaFallarCuandoMontoEsCero() {
         StepVerifier.create(useCase.ejecutar(documentoValido, BigDecimal.ZERO, plazoValido, tipoPrestamoValido, "Bearer test-token"))
             .expectError(DatosInvalidosException.class)
             .verify();
     }
 
-    @Test  
+    @Test
+    void deberiaFallarCuandoMontoEsNegativo() {
+        BigDecimal montoNegativo = BigDecimal.valueOf(-1000);
+        
+        StepVerifier.create(useCase.ejecutar(documentoValido, montoNegativo, plazoValido, tipoPrestamoValido, "Bearer test-token"))
+            .expectError(DatosInvalidosException.class)
+            .verify();
+    }
+
+    @Test
+    void deberiaFallarCuandoPlazoEsNulo() {
+        StepVerifier.create(useCase.ejecutar(documentoValido, montoValido, null, tipoPrestamoValido, "Bearer test-token"))
+            .expectError(DatosInvalidosException.class)
+            .verify();
+    }
+
+    @Test
     void deberiaFallarCuandoPlazoEsCero() {
         StepVerifier.create(useCase.ejecutar(documentoValido, montoValido, 0, tipoPrestamoValido, "Bearer test-token"))
+            .expectError(DatosInvalidosException.class)
+            .verify();
+    }
+
+    @Test
+    void deberiaFallarCuandoPlazoEsNegativo() {
+        StepVerifier.create(useCase.ejecutar(documentoValido, montoValido, -1, tipoPrestamoValido, "Bearer test-token"))
+            .expectError(DatosInvalidosException.class)
+            .verify();
+    }
+
+    @Test
+    void deberiaFallarCuandoTipoPrestamoEsNulo() {
+        StepVerifier.create(useCase.ejecutar(documentoValido, montoValido, plazoValido, null, "Bearer test-token"))
+            .expectError(DatosInvalidosException.class)
+            .verify();
+    }
+
+    @Test
+    void deberiaFallarCuandoTipoPrestamoEsVacio() {
+        StepVerifier.create(useCase.ejecutar(documentoValido, montoValido, plazoValido, "", "Bearer test-token"))
+            .expectError(DatosInvalidosException.class)
+            .verify();
+    }
+
+    @Test
+    void deberiaFallarCuandoTipoPrestamoSoloTieneEspacios() {
+        StepVerifier.create(useCase.ejecutar(documentoValido, montoValido, plazoValido, "   ", "Bearer test-token"))
             .expectError(DatosInvalidosException.class)
             .verify();
     }
@@ -132,6 +190,90 @@ class RegistrarSolicitudUseCaseTest {
 
         StepVerifier.create(useCase.ejecutar(documentoValido, montoValido, plazoValido, tipoPrestamoValido, "Bearer test-token"))
             .expectError(DocumentoNoValidoException.class)
+            .verify();
+    }
+
+    @Test
+    void deberiaCrearSolicitudSinTokenAutorizacion() {
+        Solicitud solicitudEsperada = Solicitud.crearNueva(
+            documentoValido, montoValido, plazoValido, tipoPrestamoValido
+        );
+        
+        ValidacionDocumento validacionExitosa = ValidacionDocumento.builder()
+            .documentoIdentidad(documentoValido)
+            .existe(true)
+            .mensaje("Documento válido")
+            .build();
+        
+        when(validacionDocumentoGateway.validarDocumento(documentoValido, null)).thenReturn(Mono.just(validacionExitosa));
+        when(solicitudRepository.existeTipoPrestamo(anyString())).thenReturn(Mono.just(true));
+        when(solicitudRepository.guardar(any(Solicitud.class))).thenReturn(Mono.just(solicitudEsperada));
+
+        StepVerifier.create(useCase.ejecutar(documentoValido, montoValido, plazoValido, tipoPrestamoValido, null))
+            .expectNextMatches(solicitud -> 
+                solicitud.getDocumentoIdentidad().equals(documentoValido) &&
+                solicitud.getMonto().equals(montoValido) &&
+                solicitud.getPlazo().equals(plazoValido) &&
+                solicitud.getTipoPrestamoId().equals(tipoPrestamoValido) &&
+                solicitud.getEstado() == EstadoSolicitud.PENDIENTE_REVISION
+            )
+            .verifyComplete();
+    }
+
+    @Test
+    void deberiaCrearSolicitudConTokenVacio() {
+        Solicitud solicitudEsperada = Solicitud.crearNueva(
+            documentoValido, montoValido, plazoValido, tipoPrestamoValido
+        );
+        
+        ValidacionDocumento validacionExitosa = ValidacionDocumento.builder()
+            .documentoIdentidad(documentoValido)
+            .existe(true)
+            .mensaje("Documento válido")
+            .build();
+        
+        when(validacionDocumentoGateway.validarDocumento(documentoValido, "")).thenReturn(Mono.just(validacionExitosa));
+        when(solicitudRepository.existeTipoPrestamo(anyString())).thenReturn(Mono.just(true));
+        when(solicitudRepository.guardar(any(Solicitud.class))).thenReturn(Mono.just(solicitudEsperada));
+
+        StepVerifier.create(useCase.ejecutar(documentoValido, montoValido, plazoValido, tipoPrestamoValido, ""))
+            .expectNextMatches(solicitud -> 
+                solicitud.getDocumentoIdentidad().equals(documentoValido) &&
+                solicitud.getMonto().equals(montoValido) &&
+                solicitud.getPlazo().equals(plazoValido) &&
+                solicitud.getTipoPrestamoId().equals(tipoPrestamoValido) &&
+                solicitud.getEstado() == EstadoSolicitud.PENDIENTE_REVISION
+            )
+            .verifyComplete();
+    }
+
+    @Test
+    void deberiaFallarCuandoValidacionDocumentoFalla() {
+        RuntimeException errorValidacion = new RuntimeException("Error de conexión con servicio de validación");
+        
+        when(validacionDocumentoGateway.validarDocumento(anyString(), anyString())).thenReturn(Mono.error(errorValidacion));
+        when(solicitudRepository.existeTipoPrestamo(anyString())).thenReturn(Mono.just(true));
+
+        StepVerifier.create(useCase.ejecutar(documentoValido, montoValido, plazoValido, tipoPrestamoValido, "Bearer test-token"))
+            .expectError(RuntimeException.class)
+            .verify();
+    }
+
+    @Test
+    void deberiaFallarCuandoGuardadoFalla() {
+        ValidacionDocumento validacionExitosa = ValidacionDocumento.builder()
+            .documentoIdentidad(documentoValido)
+            .existe(true)
+            .mensaje("Documento válido")
+            .build();
+        RuntimeException errorGuardado = new RuntimeException("Error al guardar en base de datos");
+        
+        when(validacionDocumentoGateway.validarDocumento(anyString(), anyString())).thenReturn(Mono.just(validacionExitosa));
+        when(solicitudRepository.existeTipoPrestamo(anyString())).thenReturn(Mono.just(true));
+        when(solicitudRepository.guardar(any(Solicitud.class))).thenReturn(Mono.error(errorGuardado));
+
+        StepVerifier.create(useCase.ejecutar(documentoValido, montoValido, plazoValido, tipoPrestamoValido, "Bearer test-token"))
+            .expectError(RuntimeException.class)
             .verify();
     }
 }

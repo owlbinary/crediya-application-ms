@@ -24,6 +24,10 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class ValidacionDocumentoAdapterTest {
 
+    private static final String BEARER_TOKEN = "Bearer jwt-token-123";
+    private static final String DOCUMENTO_VALIDO_MSG = "Documento válido";
+    private static final String VALIDATION_URL = "http://localhost:8081";
+
     @Mock
     private WebClient webClient;
     
@@ -40,13 +44,11 @@ class ValidacionDocumentoAdapterTest {
     private ValidacionDocumentoAdapter adapter;
 
     private String documentoValido;
-    private String urlBase;
 
     @BeforeEach
     void setUp() {
         documentoValido = "12345678";
-        urlBase = "http://localhost:8081";
-        ReflectionTestUtils.setField(adapter, "validacionDocumentoUrl", urlBase);
+        ReflectionTestUtils.setField(adapter, "validacionDocumentoUrl", VALIDATION_URL);
     }
 
     @Test
@@ -54,7 +56,7 @@ class ValidacionDocumentoAdapterTest {
         ValidacionDocumentoResponse response = ValidacionDocumentoResponse.builder()
             .documentoIdentidad(documentoValido)
             .existe(true)
-            .mensaje("Documento válido")
+            .mensaje(DOCUMENTO_VALIDO_MSG)
             .build();
 
         when(webClient.get()).thenReturn(requestHeadersUriSpec);
@@ -63,17 +65,17 @@ class ValidacionDocumentoAdapterTest {
         when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
         when(responseSpec.bodyToMono(ValidacionDocumentoResponse.class)).thenReturn(Mono.just(response));
 
-        StepVerifier.create(adapter.validarDocumento(documentoValido, "Bearer jwt-token-123"))
+        StepVerifier.create(adapter.validarDocumento(documentoValido, BEARER_TOKEN))
             .expectNextMatches(validacion -> 
                 validacion.getDocumentoIdentidad().equals(documentoValido) &&
                 validacion.getExiste().equals(true) &&
-                validacion.getMensaje().equals("Documento válido")
+                validacion.getMensaje().equals(DOCUMENTO_VALIDO_MSG)
             )
             .verifyComplete();
 
-        verify(tokenService).hasToken();
-        verify(tokenService).getBearerToken();
-        verify(requestHeadersSpec).header("Authorization", "Bearer jwt-token-123");
+        verify(webClient).get();
+        verify(requestHeadersUriSpec).uri(anyString(), anyString());
+        verify(requestHeadersSpec).headers(any());
     }
 
     @Test
@@ -81,25 +83,23 @@ class ValidacionDocumentoAdapterTest {
         ValidacionDocumentoResponse response = ValidacionDocumentoResponse.builder()
             .documentoIdentidad(documentoValido)
             .existe(true)
-            .mensaje("Documento válido")
+            .mensaje(DOCUMENTO_VALIDO_MSG)
             .build();
 
-        when(tokenService.hasToken()).thenReturn(false);
         when(webClient.get()).thenReturn(requestHeadersUriSpec);
         when(requestHeadersUriSpec.uri(anyString(), anyString())).thenReturn(requestHeadersSpec);
         when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
         when(responseSpec.bodyToMono(ValidacionDocumentoResponse.class)).thenReturn(Mono.just(response));
 
-        StepVerifier.create(adapter.validarDocumento(documentoValido))
+        StepVerifier.create(adapter.validarDocumento(documentoValido, null))
             .expectNextMatches(validacion -> 
                 validacion.getDocumentoIdentidad().equals(documentoValido) &&
                 validacion.getExiste().equals(true)
             )
             .verifyComplete();
 
-        verify(tokenService).hasToken();
-        verify(tokenService, never()).getBearerToken();
-        verify(requestHeadersSpec, never()).header(eq("Authorization"), anyString());
+        verify(webClient).get();
+        verify(requestHeadersUriSpec).uri(anyString(), anyString());
     }
 
     @Test
@@ -107,15 +107,13 @@ class ValidacionDocumentoAdapterTest {
         WebClientResponseException excepcion = WebClientResponseException.create(
             HttpStatus.UNAUTHORIZED.value(), "Unauthorized", null, null, null);
 
-        when(tokenService.hasToken()).thenReturn(true);
-        when(tokenService.getBearerToken()).thenReturn("Bearer jwt-token-123");
         when(webClient.get()).thenReturn(requestHeadersUriSpec);
         when(requestHeadersUriSpec.uri(anyString(), anyString())).thenReturn(requestHeadersSpec);
-        when(requestHeadersSpec.header(anyString(), anyString())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.headers(any())).thenReturn(requestHeadersSpec);
         when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
         when(responseSpec.bodyToMono(ValidacionDocumentoResponse.class)).thenReturn(Mono.error(excepcion));
 
-        StepVerifier.create(adapter.validarDocumento(documentoValido))
+        StepVerifier.create(adapter.validarDocumento(documentoValido, BEARER_TOKEN))
             .expectError(AutenticacionException.class)
             .verify();
     }
@@ -125,15 +123,13 @@ class ValidacionDocumentoAdapterTest {
         WebClientResponseException excepcion = WebClientResponseException.create(
             HttpStatus.FORBIDDEN.value(), "Forbidden", null, null, null);
 
-        when(tokenService.hasToken()).thenReturn(true);
-        when(tokenService.getBearerToken()).thenReturn("Bearer jwt-token-123");
         when(webClient.get()).thenReturn(requestHeadersUriSpec);
         when(requestHeadersUriSpec.uri(anyString(), anyString())).thenReturn(requestHeadersSpec);
-        when(requestHeadersSpec.header(anyString(), anyString())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.headers(any())).thenReturn(requestHeadersSpec);
         when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
         when(responseSpec.bodyToMono(ValidacionDocumentoResponse.class)).thenReturn(Mono.error(excepcion));
 
-        StepVerifier.create(adapter.validarDocumento(documentoValido))
+        StepVerifier.create(adapter.validarDocumento(documentoValido, BEARER_TOKEN))
             .expectError(AutenticacionException.class)
             .verify();
     }
@@ -143,15 +139,13 @@ class ValidacionDocumentoAdapterTest {
         WebClientResponseException excepcion = WebClientResponseException.create(
             HttpStatus.INTERNAL_SERVER_ERROR.value(), "Internal Server Error", null, null, null);
 
-        when(tokenService.hasToken()).thenReturn(true);
-        when(tokenService.getBearerToken()).thenReturn("Bearer jwt-token-123");
         when(webClient.get()).thenReturn(requestHeadersUriSpec);
         when(requestHeadersUriSpec.uri(anyString(), anyString())).thenReturn(requestHeadersSpec);
-        when(requestHeadersSpec.header(anyString(), anyString())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.headers(any())).thenReturn(requestHeadersSpec);
         when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
         when(responseSpec.bodyToMono(ValidacionDocumentoResponse.class)).thenReturn(Mono.error(excepcion));
 
-        StepVerifier.create(adapter.validarDocumento(documentoValido))
+        StepVerifier.create(adapter.validarDocumento(documentoValido, BEARER_TOKEN))
             .expectError(InfraestructuraException.class)
             .verify();
     }
