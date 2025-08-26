@@ -2,9 +2,12 @@ package co.com.crediya.usecase.registrarsolicitud;
 
 import co.com.crediya.model.EstadoSolicitud;
 import co.com.crediya.model.Solicitud;
+import co.com.crediya.model.ValidacionDocumento;
 import co.com.crediya.model.exception.DatosInvalidosException;
+import co.com.crediya.model.exception.DocumentoNoValidoException;
 import co.com.crediya.model.exception.TipoPrestamoNoExisteException;
 import co.com.crediya.model.gateway.SolicitudGateway;
+import co.com.crediya.model.gateway.ValidacionDocumentoGateway;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,6 +28,9 @@ class RegistrarSolicitudUseCaseTest {
 
     @Mock
     private SolicitudGateway solicitudRepository;
+    
+    @Mock
+    private ValidacionDocumentoGateway validacionDocumentoGateway;
 
     @InjectMocks
     private RegistrarSolicitudUseCase useCase;
@@ -48,10 +54,17 @@ class RegistrarSolicitudUseCaseTest {
             documentoValido, montoValido, plazoValido, tipoPrestamoValido
         );
         
+        ValidacionDocumento validacionExitosa = ValidacionDocumento.builder()
+            .documentoIdentidad(documentoValido)
+            .existe(true)
+            .mensaje("Documento válido")
+            .build();
+        
+        when(validacionDocumentoGateway.validarDocumento(anyString(), anyString())).thenReturn(Mono.just(validacionExitosa));
         when(solicitudRepository.existeTipoPrestamo(anyString())).thenReturn(Mono.just(true));
         when(solicitudRepository.guardar(any(Solicitud.class))).thenReturn(Mono.just(solicitudEsperada));
 
-        StepVerifier.create(useCase.ejecutar(documentoValido, montoValido, plazoValido, tipoPrestamoValido))
+        StepVerifier.create(useCase.ejecutar(documentoValido, montoValido, plazoValido, tipoPrestamoValido, "Bearer test-token"))
             .expectNextMatches(solicitud -> 
                 solicitud.getDocumentoIdentidad().equals(documentoValido) &&
                 solicitud.getMonto().equals(montoValido) &&
@@ -64,38 +77,61 @@ class RegistrarSolicitudUseCaseTest {
 
     @Test
     void deberiaFallarCuandoDocumentoEsNulo() {
-        StepVerifier.create(useCase.ejecutar(null, montoValido, plazoValido, tipoPrestamoValido))
+        StepVerifier.create(useCase.ejecutar(null, montoValido, plazoValido, tipoPrestamoValido, "Bearer test-token"))
             .expectError(DatosInvalidosException.class)
             .verify();
     }
 
     @Test
     void deberiaFallarCuandoDocumentoEsVacio() {
-        StepVerifier.create(useCase.ejecutar("", montoValido, plazoValido, tipoPrestamoValido))
+        StepVerifier.create(useCase.ejecutar("", montoValido, plazoValido, tipoPrestamoValido, "Bearer test-token"))
             .expectError(DatosInvalidosException.class)
             .verify();
     }
 
     @Test
     void deberiaFallarCuandoMontoEsCero() {
-        StepVerifier.create(useCase.ejecutar(documentoValido, BigDecimal.ZERO, plazoValido, tipoPrestamoValido))
+        StepVerifier.create(useCase.ejecutar(documentoValido, BigDecimal.ZERO, plazoValido, tipoPrestamoValido, "Bearer test-token"))
             .expectError(DatosInvalidosException.class)
             .verify();
     }
 
     @Test  
     void deberiaFallarCuandoPlazoEsCero() {
-        StepVerifier.create(useCase.ejecutar(documentoValido, montoValido, 0, tipoPrestamoValido))
+        StepVerifier.create(useCase.ejecutar(documentoValido, montoValido, 0, tipoPrestamoValido, "Bearer test-token"))
             .expectError(DatosInvalidosException.class)
             .verify();
     }
 
     @Test
     void deberiaFallarCuandoTipoPrestamoNoExiste() {
+        ValidacionDocumento validacionExitosa = ValidacionDocumento.builder()
+            .documentoIdentidad(documentoValido)
+            .existe(true)
+            .mensaje("Documento válido")
+            .build();
+            
+        when(validacionDocumentoGateway.validarDocumento(anyString(), anyString())).thenReturn(Mono.just(validacionExitosa));
         when(solicitudRepository.existeTipoPrestamo(anyString())).thenReturn(Mono.just(false));
 
-        StepVerifier.create(useCase.ejecutar(documentoValido, montoValido, plazoValido, tipoPrestamoValido))
+        StepVerifier.create(useCase.ejecutar(documentoValido, montoValido, plazoValido, tipoPrestamoValido, "Bearer test-token"))
             .expectError(TipoPrestamoNoExisteException.class)
+            .verify();
+    }
+    
+    @Test
+    void deberiaFallarCuandoDocumentoNoExiste() {
+        ValidacionDocumento validacionFallida = ValidacionDocumento.builder()
+            .documentoIdentidad(documentoValido)
+            .existe(false)
+            .mensaje("El documento de identidad no existe en el sistema")
+            .build();
+            
+        when(validacionDocumentoGateway.validarDocumento(anyString(), anyString())).thenReturn(Mono.just(validacionFallida));
+        when(solicitudRepository.existeTipoPrestamo(anyString())).thenReturn(Mono.just(true));
+
+        StepVerifier.create(useCase.ejecutar(documentoValido, montoValido, plazoValido, tipoPrestamoValido, "Bearer test-token"))
+            .expectError(DocumentoNoValidoException.class)
             .verify();
     }
 }

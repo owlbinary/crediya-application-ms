@@ -9,6 +9,8 @@ import org.springframework.web.server.ServerWebExchange;
 
 import co.com.crediya.api.constants.ErrorCodes;
 import co.com.crediya.api.dto.response.ErrorResponse;
+import co.com.crediya.model.exception.AutenticacionException;
+import co.com.crediya.model.exception.DocumentoNoValidoException;
 import co.com.crediya.model.exception.InfraestructuraException;
 import co.com.crediya.model.exception.TipoPrestamoNoExisteException;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +27,30 @@ public class GlobalExceptionHandler {
         return Mono.just(ErrorResponse.of(
             ErrorCodes.TIPO_PRESTAMO_NO_EXISTE,
             excepcion.getMessage(),
+            intercambio.getRequest().getPath().value()
+        ));
+    }
+
+    @ExceptionHandler(DocumentoNoValidoException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Mono<ErrorResponse> procesarDocumentoNoValido(DocumentoNoValidoException excepcion, ServerWebExchange intercambio) {
+        log.warn("Documento no válido: {}", excepcion.getMessage());
+        
+        return Mono.just(ErrorResponse.of(
+            ErrorCodes.VALIDACION_FALLIDA,
+            excepcion.getMessage(),
+            intercambio.getRequest().getPath().value()
+        ));
+    }
+
+    @ExceptionHandler(AutenticacionException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public Mono<ErrorResponse> procesarErrorAutenticacion(AutenticacionException excepcion, ServerWebExchange intercambio) {
+        log.error("Error de autenticación en servicio externo: {}", excepcion.getMessage());
+        
+        return Mono.just(ErrorResponse.of(
+            ErrorCodes.ERROR_INTERNO,
+            "Error de autenticación con servicio externo",
             intercambio.getRequest().getPath().value()
         ));
     }

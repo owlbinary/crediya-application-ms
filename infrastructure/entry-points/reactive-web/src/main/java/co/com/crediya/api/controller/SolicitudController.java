@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -34,14 +35,17 @@ public class SolicitudController {
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Crear nueva solicitud", 
                description = "Crea una nueva solicitud de crédito")
-    public Mono<SolicitudResponse> crearSolicitud(@Valid @RequestBody SolicitudRequest solicitudRequest) {
+    public Mono<SolicitudResponse> crearSolicitud(
+            @Valid @RequestBody SolicitudRequest solicitudRequest,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
         log.info("Procesando nueva solicitud para documento: {}", solicitudRequest.getDocumentoIdentidad());
 
         return registrarSolicitudUseCase.ejecutar(
                 solicitudRequest.getDocumentoIdentidad(),
                 solicitudRequest.getMonto(),
                 solicitudRequest.getPlazo(),
-                solicitudRequest.getTipoPrestamoId()
+                solicitudRequest.getTipoPrestamoId(),
+                authorizationHeader
             )
             .map(solicitudMapper::toResponse)
             .doOnNext(respuesta -> log.info("Solicitud creada con éxito ID: {}", respuesta.getId()))

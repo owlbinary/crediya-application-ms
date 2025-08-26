@@ -1,8 +1,10 @@
 package co.com.crediya.usecase.registrarsolicitud;
 
 import co.com.crediya.model.exception.DatosInvalidosException;
+import co.com.crediya.model.exception.DocumentoNoValidoException;
 import co.com.crediya.model.exception.TipoPrestamoNoExisteException;
 import co.com.crediya.model.gateway.SolicitudGateway;
+import co.com.crediya.model.gateway.ValidacionDocumentoGateway;
 import co.com.crediya.model.Solicitud;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
@@ -17,6 +19,7 @@ import java.math.BigDecimal;
 public class RegistrarSolicitudUseCase {
     
     private final SolicitudGateway solicitudRepository;
+    private final ValidacionDocumentoGateway validacionDocumentoGateway;
     
     /**
      * Ejecuta el proceso de registro de una nueva solicitud.
@@ -25,19 +28,23 @@ public class RegistrarSolicitudUseCase {
      * @param monto Monto solicitado para el préstamo
      * @param plazo Plazo en meses para el préstamo
      * @param tipoPrestamoId Identificador del tipo de préstamo
+     * @param authorizationToken Token de autorización para validación externa
      * @return Mono con la solicitud creada
      */
     public Mono<Solicitud> ejecutar(String documentoIdentidad, BigDecimal monto, 
-                                   Integer plazo, String tipoPrestamoId) {
+                                   Integer plazo, String tipoPrestamoId, String authorizationToken) {
         
-        try {
-            validarDatosEntrada(documentoIdentidad, monto, plazo, tipoPrestamoId);
-        } catch (Exception e) {
-            return Mono.error(e);
-        }
-        
-        return validarReglasNegocio(tipoPrestamoId)
-            .then(crearYPersistirSolicitud(documentoIdentidad, monto, plazo, tipoPrestamoId));
+        return Mono.defer(() -> {
+            try {
+                validarDatosEntrada(documentoIdentidad, monto, plazo, tipoPrestamoId);
+            } catch (Exception e) {
+                return Mono.error(e);
+            }
+            
+            return validarDocumentoEnSistema(documentoIdentidad, authorizationToken)
+                .then(validarReglasNegocio(tipoPrestamoId))
+                .then(crearYPersistirSolicitud(documentoIdentidad, monto, plazo, tipoPrestamoId));
+        });
     }
     
     private void validarDatosEntrada(String documentoIdentidad, BigDecimal monto, 
@@ -74,6 +81,16 @@ public class RegistrarSolicitudUseCase {
     
     private Mono<Void> validarReglasNegocio(String tipoPrestamoId) {
         return validarDisponibilidadTipoPrestamo(tipoPrestamoId);
+    }
+    
+    private Mono<Void> validarDocumentoEnSistema(String documentoIdentidad, String authorizationToken) {
+        return validacionDocumentoGateway.validarDocumento(documentoIdentidad, authorizationToken)
+            .flatMap(validacion -> {
+                if (Boolean.FALSE.equals(validacion.getExiste())) {
+                    return Mono.error(new DocumentoNoValidoException(validacion.getMensaje()));
+                }
+                return Mono.empty();
+            });
     }
     
     private Mono<Void> validarDisponibilidadTipoPrestamo(String tipoPrestamoId) {
