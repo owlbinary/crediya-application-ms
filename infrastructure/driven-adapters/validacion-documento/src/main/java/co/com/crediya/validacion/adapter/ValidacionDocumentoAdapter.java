@@ -1,10 +1,12 @@
 package co.com.crediya.validacion.adapter;
 
+import co.com.crediya.model.DetalleUsuario;
 import co.com.crediya.model.ValidacionDocumento;
 import co.com.crediya.model.gateway.ValidacionDocumentoGateway;
 import co.com.crediya.model.exception.AutenticacionException;
 import co.com.crediya.model.exception.DocumentoNoValidoException;
 import co.com.crediya.model.exception.InfraestructuraException;
+import co.com.crediya.validacion.dto.DetalleUsuarioResponse;
 import co.com.crediya.validacion.dto.ValidacionDocumentoResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -70,9 +72,28 @@ public class ValidacionDocumentoAdapter implements ValidacionDocumentoGateway {
     
     private ValidacionDocumento mapearRespuesta(ValidacionDocumentoResponse response) {
         return ValidacionDocumento.builder()
-            .documentoIdentidad(response.getDocumentoIdentidad())
             .existe(response.getExiste())
             .mensaje(response.getMensaje())
+            .detalleUsuario(mapearDetalleUsuario(response.getDetalleUsuario()))
+            .build();
+    }
+    
+    private DetalleUsuario mapearDetalleUsuario(DetalleUsuarioResponse detalleResponse) {
+        if (detalleResponse == null) {
+            return null;
+        }
+        
+        return DetalleUsuario.builder()
+            .idUsuario(detalleResponse.getIdUsuario())
+            .nombre(detalleResponse.getNombre())
+            .apellido(detalleResponse.getApellido())
+            .email(detalleResponse.getEmail())
+            .documentoIdentidad(detalleResponse.getDocumentoIdentidad())
+            .telefono(detalleResponse.getTelefono())
+            .direccion(detalleResponse.getDireccion())
+            .idRol(detalleResponse.getIdRol())
+            .salarioBase(detalleResponse.getSalarioBase())
+            .fechaCreacion(detalleResponse.getFechaCreacion())
             .build();
     }
     

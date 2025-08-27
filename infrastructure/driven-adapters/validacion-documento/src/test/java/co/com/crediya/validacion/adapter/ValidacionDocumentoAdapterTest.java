@@ -3,6 +3,7 @@ package co.com.crediya.validacion.adapter;
 import co.com.crediya.model.ValidacionDocumento;
 import co.com.crediya.model.exception.AutenticacionException;
 import co.com.crediya.model.exception.InfraestructuraException;
+import co.com.crediya.validacion.dto.DetalleUsuarioResponse;
 import co.com.crediya.validacion.dto.ValidacionDocumentoResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -54,7 +58,6 @@ class ValidacionDocumentoAdapterTest {
     @Test
     void deberiaValidarDocumentoExitosamenteConToken() {
         ValidacionDocumentoResponse response = ValidacionDocumentoResponse.builder()
-            .documentoIdentidad(documentoValido)
             .existe(true)
             .mensaje(DOCUMENTO_VALIDO_MSG)
             .build();
@@ -67,7 +70,6 @@ class ValidacionDocumentoAdapterTest {
 
         StepVerifier.create(adapter.validarDocumento(documentoValido, BEARER_TOKEN))
             .expectNextMatches(validacion -> 
-                validacion.getDocumentoIdentidad().equals(documentoValido) &&
                 validacion.getExiste().equals(true) &&
                 validacion.getMensaje().equals(DOCUMENTO_VALIDO_MSG)
             )
@@ -81,7 +83,6 @@ class ValidacionDocumentoAdapterTest {
     @Test
     void deberiaValidarDocumentoSinToken() {
         ValidacionDocumentoResponse response = ValidacionDocumentoResponse.builder()
-            .documentoIdentidad(documentoValido)
             .existe(true)
             .mensaje(DOCUMENTO_VALIDO_MSG)
             .build();
@@ -93,13 +94,55 @@ class ValidacionDocumentoAdapterTest {
 
         StepVerifier.create(adapter.validarDocumento(documentoValido, null))
             .expectNextMatches(validacion -> 
-                validacion.getDocumentoIdentidad().equals(documentoValido) &&
                 validacion.getExiste().equals(true)
             )
             .verifyComplete();
 
         verify(webClient).get();
         verify(requestHeadersUriSpec).uri(anyString(), anyString());
+    }
+
+    @Test
+    void deberiaValidarDocumentoConDetalleUsuario() {
+        DetalleUsuarioResponse detalleUsuario = DetalleUsuarioResponse.builder()
+            .idUsuario(1L)
+            .nombre("Juan")
+            .apellido("Pérez")
+            .email("juan.perez@email.com")
+            .documentoIdentidad(documentoValido)
+            .telefono("3001234567")
+            .direccion("Calle 123 #45-67")
+            .idRol(2L)
+            .salarioBase(new BigDecimal("2500000"))
+            .fechaCreacion(LocalDateTime.now())
+            .build();
+
+        ValidacionDocumentoResponse response = ValidacionDocumentoResponse.builder()
+            .existe(true)
+            .mensaje(DOCUMENTO_VALIDO_MSG)
+            .detalleUsuario(detalleUsuario)
+            .build();
+
+        when(webClient.get()).thenReturn(requestHeadersUriSpec);
+        when(requestHeadersUriSpec.uri(anyString(), anyString())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.headers(any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(ValidacionDocumentoResponse.class)).thenReturn(Mono.just(response));
+
+        StepVerifier.create(adapter.validarDocumento(documentoValido, BEARER_TOKEN))
+            .expectNextMatches(validacion -> 
+                validacion.getExiste().equals(true) &&
+                validacion.getMensaje().equals(DOCUMENTO_VALIDO_MSG) &&
+                validacion.getDetalleUsuario() != null &&
+                validacion.getDetalleUsuario().getNombre().equals("Juan") &&
+                validacion.getDetalleUsuario().getApellido().equals("Pérez") &&
+                validacion.getDetalleUsuario().getEmail().equals("juan.perez@email.com")
+            )
+            .verifyComplete();
+
+        verify(webClient).get();
+        verify(requestHeadersUriSpec).uri(anyString(), anyString());
+        verify(requestHeadersSpec).headers(any());
     }
 
     @Test

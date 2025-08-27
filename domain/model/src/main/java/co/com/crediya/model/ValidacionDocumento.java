@@ -16,4 +16,5 @@ public class ValidacionDocumento {
     private String documentoIdentidad;
     private Boolean existe;
     private String mensaje;
+    private DetalleUsuario detalleUsuario;
 }
