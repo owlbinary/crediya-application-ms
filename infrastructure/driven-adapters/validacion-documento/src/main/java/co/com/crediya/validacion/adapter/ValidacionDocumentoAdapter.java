@@ -8,7 +8,6 @@ import co.com.crediya.model.exception.DocumentoNoValidoException;
 import co.com.crediya.model.exception.InfraestructuraException;
 import co.com.crediya.validacion.dto.DetalleUsuarioResponse;
 import co.com.crediya.validacion.dto.ValidacionDocumentoResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,14 +22,18 @@ import reactor.core.publisher.Mono;
  */
 @Slf4j
 @Repository
-@RequiredArgsConstructor
 public class ValidacionDocumentoAdapter implements ValidacionDocumentoGateway {
     
     @Qualifier("validacionWebClient")
     private final WebClient webClient;
     
-    @Value("${validacion.documento.url}")
-    private String validacionDocumentoUrl;
+    private final String validacionDocumentoUrl;
+    
+    public ValidacionDocumentoAdapter(@Qualifier("validacionWebClient") WebClient webClient,
+                                     @Value("${validacion.documento.url}") String validacionDocumentoUrl) {
+        this.webClient = webClient;
+        this.validacionDocumentoUrl = validacionDocumentoUrl;
+    }
     
     private static final String ENDPOINT_VALIDACION = "/api/v1/validaciones/documento/{documentoIdentidad}";
     private static final String MENSAJE_INICIANDO_VALIDACION = "Iniciando validación de documento: {}";

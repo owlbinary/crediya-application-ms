@@ -3,6 +3,7 @@ package co.com.crediya.api.controller;
 import co.com.crediya.api.dto.request.SolicitudRequest;
 import co.com.crediya.api.dto.response.SolicitudResponse;
 import co.com.crediya.api.mapper.SolicitudMapper;
+import co.com.crediya.api.security.JwtUserPrincipal;
 import co.com.crediya.model.EstadoSolicitud;
 import co.com.crediya.model.Solicitud;
 import co.com.crediya.model.exception.DatosInvalidosException;
@@ -15,11 +16,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
@@ -39,6 +44,7 @@ class SolicitudControllerTest {
     private SolicitudRequest solicitudRequestValida;
     private Solicitud solicitudDominio;
     private SolicitudResponse solicitudResponse;
+    private Authentication authentication;
 
     @BeforeEach
     void setUp() {
@@ -71,6 +77,17 @@ class SolicitudControllerTest {
             .fechaCreacion(LocalDateTime.now())
             .fechaActualizacion(LocalDateTime.now())
             .build();
+
+        JwtUserPrincipal principal = JwtUserPrincipal.builder()
+                .email("test@ejemplo.com")
+                .idUsuario("123")
+                .nombre("Juan")
+                .apellido("Pérez")
+                .idRol("1")
+                .build();
+
+        authentication = new UsernamePasswordAuthenticationToken(
+                principal, null, List.of(new SimpleGrantedAuthority("ROLE_1")));
     }
 
     @Test
@@ -81,7 +98,7 @@ class SolicitudControllerTest {
         when(solicitudMapper.toResponse(any(Solicitud.class)))
             .thenReturn(solicitudResponse);
 
-        StepVerifier.create(solicitudController.crearSolicitud(solicitudRequestValida, "Bearer token"))
+        StepVerifier.create(solicitudController.crearSolicitud(solicitudRequestValida, "Bearer token", authentication))
             .expectNextMatches(response -> 
                 response.getId().equals("1") &&
                 response.getDocumentoIdentidad().equals("12345678") &&
@@ -101,7 +118,7 @@ class SolicitudControllerTest {
         when(solicitudMapper.toResponse(any(Solicitud.class)))
             .thenReturn(solicitudResponse);
 
-        StepVerifier.create(solicitudController.crearSolicitud(solicitudRequestValida, null))
+        StepVerifier.create(solicitudController.crearSolicitud(solicitudRequestValida, null, authentication))
             .expectNextMatches(response -> response.getId().equals("1"))
             .verifyComplete();
     }
@@ -112,7 +129,7 @@ class SolicitudControllerTest {
                 anyInt(), anyString(), anyString()))
             .thenReturn(Mono.error(new DocumentoNoValidoException("Documento no válido")));
 
-        StepVerifier.create(solicitudController.crearSolicitud(solicitudRequestValida, "Bearer token"))
+        StepVerifier.create(solicitudController.crearSolicitud(solicitudRequestValida, "Bearer token", authentication))
             .expectError(DocumentoNoValidoException.class)
             .verify();
     }
@@ -123,7 +140,7 @@ class SolicitudControllerTest {
                 anyInt(), anyString(), anyString()))
             .thenReturn(Mono.error(new TipoPrestamoNoExisteException("Tipo de préstamo no existe")));
 
-        StepVerifier.create(solicitudController.crearSolicitud(solicitudRequestValida, "Bearer token"))
+        StepVerifier.create(solicitudController.crearSolicitud(solicitudRequestValida, "Bearer token", authentication))
             .expectError(TipoPrestamoNoExisteException.class)
             .verify();
     }
@@ -134,7 +151,7 @@ class SolicitudControllerTest {
                 anyInt(), anyString(), anyString()))
             .thenReturn(Mono.error(new DatosInvalidosException("Datos inválidos")));
 
-        StepVerifier.create(solicitudController.crearSolicitud(solicitudRequestValida, "Bearer token"))
+        StepVerifier.create(solicitudController.crearSolicitud(solicitudRequestValida, "Bearer token", authentication))
             .expectError(DatosInvalidosException.class)
             .verify();
     }
@@ -145,7 +162,7 @@ class SolicitudControllerTest {
                 anyInt(), anyString(), anyString()))
             .thenReturn(Mono.error(new RuntimeException("Error inesperado")));
 
-        StepVerifier.create(solicitudController.crearSolicitud(solicitudRequestValida, "Bearer token"))
+        StepVerifier.create(solicitudController.crearSolicitud(solicitudRequestValida, "Bearer token", authentication))
             .expectError(RuntimeException.class)
             .verify();
     }
