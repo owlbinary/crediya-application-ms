@@ -1,5 +1,9 @@
 package co.com.crediya.r2dbc.adapter;
 
+import java.util.List;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.reactive.TransactionalOperator;
 
@@ -11,6 +15,7 @@ import co.com.crediya.r2dbc.repository.SolicitudRepository;
 import co.com.crediya.r2dbc.repository.TipoPrestamoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Slf4j
@@ -117,5 +122,20 @@ public class SolicitudRepositoryAdapter implements SolicitudGateway {
     private Mono<Boolean> manejarErrorConsultaTipoPrestamo(Throwable error) {
         log.warn(MENSAJE_ERROR_CONSULTA_PRINCIPAL, error.getMessage());
         return Mono.just(false);
+    }
+
+    @Override
+    public Flux<Solicitud> obtenerSolicitudesPendientesRevision(int pagina, int tamano) {
+        log.debug("Obteniendo solicitudes pendientes de revisión - página: {}, tamaño: {}", pagina, tamano);
+        
+        Pageable pageable = PageRequest.of(pagina, tamano);
+        List<Integer> estadosPendientes = List.of(1, 4); // PENDIENTE_REVISION, REVISION_MANUAL
+        
+        return solicitudRepository.findByIdEstadoInOrderByFechaSolicitudDesc(estadosPendientes, pageable)
+            .map(entityMapper::toDomain)
+            .as(transactionalOperator::transactional)
+            .doOnNext(solicitud -> log.debug("Solicitud pendiente recuperada: {}", solicitud.getId()))
+            .doOnError(excepcion -> 
+                log.error("Error obteniendo solicitudes pendientes: {}", excepcion.getMessage()));
     }
 }

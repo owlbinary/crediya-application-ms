@@ -55,7 +55,6 @@ class RegistrarSolicitudUseCaseTest {
         );
         
         ValidacionDocumento validacionExitosa = ValidacionDocumento.builder()
-            .documentoIdentidad(documentoValido)
             .existe(true)
             .mensaje("Documento válido")
             .build();
@@ -164,7 +163,6 @@ class RegistrarSolicitudUseCaseTest {
     @Test
     void deberiaFallarCuandoTipoPrestamoNoExiste() {
         ValidacionDocumento validacionExitosa = ValidacionDocumento.builder()
-            .documentoIdentidad(documentoValido)
             .existe(true)
             .mensaje("Documento válido")
             .build();
@@ -180,7 +178,6 @@ class RegistrarSolicitudUseCaseTest {
     @Test
     void deberiaFallarCuandoDocumentoNoExiste() {
         ValidacionDocumento validacionFallida = ValidacionDocumento.builder()
-            .documentoIdentidad(documentoValido)
             .existe(false)
             .mensaje("El documento de identidad no existe en el sistema")
             .build();
@@ -200,7 +197,6 @@ class RegistrarSolicitudUseCaseTest {
         );
         
         ValidacionDocumento validacionExitosa = ValidacionDocumento.builder()
-            .documentoIdentidad(documentoValido)
             .existe(true)
             .mensaje("Documento válido")
             .build();
@@ -227,7 +223,6 @@ class RegistrarSolicitudUseCaseTest {
         );
         
         ValidacionDocumento validacionExitosa = ValidacionDocumento.builder()
-            .documentoIdentidad(documentoValido)
             .existe(true)
             .mensaje("Documento válido")
             .build();
@@ -262,7 +257,6 @@ class RegistrarSolicitudUseCaseTest {
     @Test
     void deberiaFallarCuandoGuardadoFalla() {
         ValidacionDocumento validacionExitosa = ValidacionDocumento.builder()
-            .documentoIdentidad(documentoValido)
             .existe(true)
             .mensaje("Documento válido")
             .build();

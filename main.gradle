@@ -21,6 +21,14 @@ subprojects {
         targetCompatibility = JavaVersion.VERSION_21
     }
 
+    compileJava {
+        options.compilerArgs << '-parameters'
+    }
+
+    compileTestJava {
+        options.compilerArgs << '-parameters'
+    }
+
     //build.dependsOn 'pitest'
 
     test {

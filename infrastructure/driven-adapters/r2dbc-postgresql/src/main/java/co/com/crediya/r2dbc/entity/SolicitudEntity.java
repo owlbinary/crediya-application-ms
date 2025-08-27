@@ -48,4 +48,7 @@ public class SolicitudEntity {
 
     @Column("observaciones")
     private String observaciones;
+    
+    @Column("deuda_total_mensual_solicitudes_aprobadas")
+    private BigDecimal deudaTotalMensualSolicitudesAprobadas;
 }

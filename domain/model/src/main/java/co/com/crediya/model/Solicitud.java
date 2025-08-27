@@ -25,6 +25,7 @@ public class Solicitud {
     private EstadoSolicitud estado;
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaActualizacion;
+    private BigDecimal deudaTotalMensual;
     
     /**
      * Factory method para crear una nueva solicitud en estado inicial.

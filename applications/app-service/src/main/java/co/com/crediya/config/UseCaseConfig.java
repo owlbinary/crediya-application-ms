@@ -4,7 +4,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import co.com.crediya.model.gateway.SolicitudGateway;
+import co.com.crediya.model.gateway.TipoPrestamoGateway;
 import co.com.crediya.model.gateway.ValidacionDocumentoGateway;
+import co.com.crediya.usecase.listarsolicitudes.ListarSolicitudesUseCase;
 import co.com.crediya.usecase.registrarsolicitud.RegistrarSolicitudUseCase;
 
 /**
@@ -19,5 +21,13 @@ public class UseCaseConfig {
             SolicitudGateway solicitudRepository,
             ValidacionDocumentoGateway validacionDocumentoGateway) {
         return new RegistrarSolicitudUseCase(solicitudRepository, validacionDocumentoGateway);
+    }
+    
+    @Bean
+    public ListarSolicitudesUseCase listarSolicitudesUseCase(
+            SolicitudGateway solicitudGateway,
+            ValidacionDocumentoGateway validacionDocumentoGateway,
+            TipoPrestamoGateway tipoPrestamoGateway) {
+        return new ListarSolicitudesUseCase(solicitudGateway, validacionDocumentoGateway, tipoPrestamoGateway);
     }
 }

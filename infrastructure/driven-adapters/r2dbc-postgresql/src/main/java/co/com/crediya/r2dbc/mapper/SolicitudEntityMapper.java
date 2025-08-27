@@ -15,6 +15,7 @@ public interface SolicitudEntityMapper {
     @Mapping(target = "tipoPrestamoId", source = "idTipoPrestamo", qualifiedByName = "entityTipoPrestamoToDomainTipoPrestamo")
     @Mapping(target = "fechaCreacion", source = "fechaSolicitud")
     @Mapping(target = "fechaActualizacion", source = "fechaActualizacion")
+    @Mapping(target = "deudaTotalMensual", source = "deudaTotalMensualSolicitudesAprobadas")
     Solicitud toDomain(SolicitudEntity entidad);
 
     @Mapping(target = "id", ignore = true)
@@ -24,6 +25,7 @@ public interface SolicitudEntityMapper {
     @Mapping(target = "fechaActualizacion", source = "fechaActualizacion")
     @Mapping(target = "email", constant = "temp@example.com")
     @Mapping(target = "observaciones", ignore = true)
+    @Mapping(target = "deudaTotalMensualSolicitudesAprobadas", source = "deudaTotalMensual")
     SolicitudEntity toEntity(Solicitud solicitud);
 
     @Named("entityIdToDomainId")

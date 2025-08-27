@@ -45,4 +45,8 @@ public class SolicitudResponse {
     @JsonProperty("fechaActualizacion")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime fechaActualizacion;
+    
+    @JsonProperty("deudaTotalMensual")
+    @JsonFormat(shape = JsonFormat.Shape.NUMBER)
+    private BigDecimal deudaTotalMensual;
 }

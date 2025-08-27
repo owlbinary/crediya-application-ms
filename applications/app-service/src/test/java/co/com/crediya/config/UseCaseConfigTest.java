@@ -1,7 +1,9 @@
 package co.com.crediya.config;
 
 import co.com.crediya.model.gateway.SolicitudGateway;
+import co.com.crediya.model.gateway.TipoPrestamoGateway;
 import co.com.crediya.model.gateway.ValidacionDocumentoGateway;
+import co.com.crediya.usecase.listarsolicitudes.ListarSolicitudesUseCase;
 import co.com.crediya.usecase.registrarsolicitud.RegistrarSolicitudUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -21,6 +23,9 @@ class UseCaseConfigTest {
 
     @Mock
     private ValidacionDocumentoGateway validacionDocumentoGateway;
+
+    @Mock
+    private TipoPrestamoGateway tipoPrestamoGateway;
 
     private UseCaseConfig useCaseConfig;
 
@@ -52,5 +57,52 @@ class UseCaseConfigTest {
                 .isNotNull()
                 .isNotSameAs(useCase2);
         assertThat(useCase2).isNotNull();
+    }
+
+    @Test
+    @DisplayName("Debe crear bean ListarSolicitudesUseCase correctamente")
+    void debeCrearBeanListarSolicitudesUseCaseCorrectamente() {
+        ListarSolicitudesUseCase useCase = useCaseConfig.listarSolicitudesUseCase(
+                solicitudGateway, validacionDocumentoGateway, tipoPrestamoGateway);
+
+        assertThat(useCase)
+                .isNotNull()
+                .isInstanceOf(ListarSolicitudesUseCase.class);
+    }
+
+    @Test
+    @DisplayName("Debe crear instancias diferentes de ListarSolicitudesUseCase en llamadas múltiples")
+    void debeCrearInstanciasDiferentesDeListarSolicitudesUseCaseEnLladasMultiples() {
+        ListarSolicitudesUseCase useCase1 = useCaseConfig.listarSolicitudesUseCase(
+                solicitudGateway, validacionDocumentoGateway, tipoPrestamoGateway);
+        ListarSolicitudesUseCase useCase2 = useCaseConfig.listarSolicitudesUseCase(
+                solicitudGateway, validacionDocumentoGateway, tipoPrestamoGateway);
+
+        assertThat(useCase1)
+                .isNotNull()
+                .isNotSameAs(useCase2);
+        assertThat(useCase2).isNotNull();
+    }
+
+    @Test
+    @DisplayName("Debe inyectar correctamente las dependencias en RegistrarSolicitudUseCase")
+    void debeInyectarCorrectamenteLasDependenciasEnRegistrarSolicitudUseCase() {
+        RegistrarSolicitudUseCase useCase = useCaseConfig.registrarSolicitudUseCase(
+                solicitudGateway, validacionDocumentoGateway);
+
+        assertThat(useCase).isNotNull();
+        
+        assertThat(useCase.getClass().getName()).contains("RegistrarSolicitudUseCase");
+    }
+
+    @Test
+    @DisplayName("Debe inyectar correctamente las dependencias en ListarSolicitudesUseCase")
+    void debeInyectarCorrectamenteLasDependenciasEnListarSolicitudesUseCase() {
+        ListarSolicitudesUseCase useCase = useCaseConfig.listarSolicitudesUseCase(
+                solicitudGateway, validacionDocumentoGateway, tipoPrestamoGateway);
+
+        assertThat(useCase).isNotNull();
+        
+        assertThat(useCase.getClass().getName()).contains("ListarSolicitudesUseCase");
     }
 }

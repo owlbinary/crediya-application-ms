@@ -104,7 +104,6 @@ public class JwtService {
      * @return Colección de autoridades
      */
     public Collection<GrantedAuthority> extraerAutoridades(String token) {
-        // Por ahora, asignamos una autoridad por defecto basada en el rol
         String idRol = extraerIdRol(token);
         String autoridad = "ROLE_" + (idRol != null ? idRol : "USER");
         return List.of(new SimpleGrantedAuthority(autoridad));

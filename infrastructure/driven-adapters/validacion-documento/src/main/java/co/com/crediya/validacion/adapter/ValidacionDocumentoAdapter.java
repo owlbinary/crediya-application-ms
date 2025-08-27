@@ -39,6 +39,9 @@ public class ValidacionDocumentoAdapter implements ValidacionDocumentoGateway {
     private static final String MENSAJE_INICIANDO_VALIDACION = "Iniciando validación de documento: {}";
     private static final String MENSAJE_VALIDACION_EXITOSA = "Validación exitosa para documento: {} - Existe: {}";
     private static final String MENSAJE_ERROR_VALIDACION = "Error al validar documento {}: {}";
+    private static final String MENSAJE_INICIANDO_DETALLE_USUARIO = "Iniciando consulta de detalle de usuario: {}";
+    private static final String MENSAJE_DETALLE_USUARIO_EXITOSO = "Detalle de usuario obtenido para documento: {}";
+    private static final String MENSAJE_ERROR_DETALLE_USUARIO = "Error al obtener detalle de usuario {}: {}";
     
     @Override
     public Mono<ValidacionDocumento> validarDocumento(String documentoIdentidad, String authorizationToken) {
@@ -65,7 +68,7 @@ public class ValidacionDocumentoAdapter implements ValidacionDocumentoGateway {
             .bodyToMono(ValidacionDocumentoResponse.class)
             .map(this::mapearRespuesta)
             .doOnNext(validacion -> 
-                log.info(MENSAJE_VALIDACION_EXITOSA, validacion.getDocumentoIdentidad(), validacion.getExiste()))
+                log.info(MENSAJE_VALIDACION_EXITOSA, documentoIdentidad, validacion.getExiste()))
             .doOnError(excepcion -> 
                 log.error(MENSAJE_ERROR_VALIDACION, documentoIdentidad, excepcion.getMessage()))
             .onErrorMap(WebClientResponseException.class, this::mapearExcepcionHttp)
@@ -120,5 +123,38 @@ public class ValidacionDocumentoAdapter implements ValidacionDocumentoGateway {
         String mensaje = String.format("Error en servicio de validación - Código: %d, Respuesta: %s", 
             excepcion.getStatusCode().value(), excepcion.getResponseBodyAsString());
         return new InfraestructuraException(mensaje, excepcion);
+    }
+
+    @Override
+    public Mono<DetalleUsuario> obtenerDetalleUsuario(String documentoIdentidad, String authorizationToken) {
+        log.debug(MENSAJE_INICIANDO_DETALLE_USUARIO, documentoIdentidad);
+        
+        String fullUrl = validacionDocumentoUrl + ENDPOINT_VALIDACION;
+        log.info("URL completa para detalle de usuario: {}", fullUrl);
+        
+        WebClient.RequestHeadersSpec<?> requestSpec = webClient.get()
+            .uri(fullUrl, documentoIdentidad);
+        
+        if (authorizationToken != null && !authorizationToken.trim().isEmpty()) {
+            requestSpec = requestSpec.headers(httpHeaders -> 
+                httpHeaders.set("Authorization", authorizationToken)
+            );
+        } else {
+            log.warn("No hay token de autenticación para consulta de detalle de usuario");
+        }
+        
+        return requestSpec
+            .retrieve()
+            .bodyToMono(ValidacionDocumentoResponse.class)
+            .map(response -> mapearDetalleUsuario(response.getDetalleUsuario()))
+            .doOnNext(detalle -> {
+                if (detalle != null) {
+                    log.info(MENSAJE_DETALLE_USUARIO_EXITOSO, detalle.getDocumentoIdentidad());
+                } else {
+                    log.warn("No se encontró detalle de usuario para documento: {}", documentoIdentidad);
+                }
+            })
+            .doOnError(excepcion -> log.error(MENSAJE_ERROR_DETALLE_USUARIO, documentoIdentidad, excepcion.getMessage()))
+            .onErrorMap(WebClientResponseException.class, this::mapearExcepcionHttp);
     }
 }
