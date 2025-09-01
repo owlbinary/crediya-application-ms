@@ -1,0 +1,10 @@
+# Ignorar archivos y carpetas innecesarias para Docker
+.gradle
+build/
+!build/libs/*.jar
+**/*.iml
+*.log
+*.md
+.git
+.gitignore
+.DS_Store
