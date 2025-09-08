@@ -53,3 +53,7 @@ logging:
 jwt:
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION}
+
+aws:
+  sqs:
+    queueUrl: ${AWS_SQS_QUEUE_URL}

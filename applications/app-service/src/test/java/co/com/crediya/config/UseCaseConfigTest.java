@@ -1,6 +1,7 @@
 package co.com.crediya.config;
 
 import co.com.crediya.model.gateway.SolicitudGateway;
+import co.com.crediya.model.gateway.NotificacionGateway;
 import co.com.crediya.model.gateway.TipoPrestamoGateway;
 import co.com.crediya.model.gateway.ValidacionDocumentoGateway;
 import co.com.crediya.usecase.listarsolicitudes.ListarSolicitudesUseCase;
@@ -18,91 +19,94 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("UseCaseConfig - Configuración de Casos de Uso")
 class UseCaseConfigTest {
 
-    @Mock
-    private SolicitudGateway solicitudGateway;
+        @Mock
+        private SolicitudGateway solicitudGateway;
 
-    @Mock
-    private ValidacionDocumentoGateway validacionDocumentoGateway;
+        @Mock
+        private ValidacionDocumentoGateway validacionDocumentoGateway;
 
-    @Mock
-    private TipoPrestamoGateway tipoPrestamoGateway;
+        @Mock
+        private TipoPrestamoGateway tipoPrestamoGateway;
 
-    private UseCaseConfig useCaseConfig;
+        @Mock
+        private NotificacionGateway notificacionGateway;
 
-    @BeforeEach
-    void setUp() {
-        useCaseConfig = new UseCaseConfig();
-    }
+        private UseCaseConfig useCaseConfig;
 
-    @Test
-    @DisplayName("Debe crear bean RegistrarSolicitudUseCase correctamente")
-    void debeCrearBeanRegistrarSolicitudUseCaseCorrectamente() {
-        RegistrarSolicitudUseCase useCase = useCaseConfig.registrarSolicitudUseCase(
-                solicitudGateway, validacionDocumentoGateway);
+        @BeforeEach
+        void setUp() {
+                useCaseConfig = new UseCaseConfig();
+        }
 
-        assertThat(useCase)
-                .isNotNull()
-                .isInstanceOf(RegistrarSolicitudUseCase.class);
-    }
+        @Test
+        @DisplayName("Debe crear bean RegistrarSolicitudUseCase correctamente")
+        void debeCrearBeanRegistrarSolicitudUseCaseCorrectamente() {
+                RegistrarSolicitudUseCase useCase = useCaseConfig.registrarSolicitudUseCase(
+                                solicitudGateway, validacionDocumentoGateway, tipoPrestamoGateway, notificacionGateway);
 
-    @Test
-    @DisplayName("Debe crear instancias diferentes en llamadas múltiples")
-    void debeCrearInstanciasDiferentesEnLladasMultiples() {
-        RegistrarSolicitudUseCase useCase1 = useCaseConfig.registrarSolicitudUseCase(
-                solicitudGateway, validacionDocumentoGateway);
-        RegistrarSolicitudUseCase useCase2 = useCaseConfig.registrarSolicitudUseCase(
-                solicitudGateway, validacionDocumentoGateway);
+                assertThat(useCase)
+                                .isNotNull()
+                                .isInstanceOf(RegistrarSolicitudUseCase.class);
+        }
 
-        assertThat(useCase1)
-                .isNotNull()
-                .isNotSameAs(useCase2);
-        assertThat(useCase2).isNotNull();
-    }
+        @Test
+        @DisplayName("Debe crear instancias diferentes en llamadas múltiples")
+        void debeCrearInstanciasDiferentesEnLladasMultiples() {
+                RegistrarSolicitudUseCase useCase1 = useCaseConfig.registrarSolicitudUseCase(
+                                solicitudGateway, validacionDocumentoGateway, tipoPrestamoGateway, notificacionGateway);
+                RegistrarSolicitudUseCase useCase2 = useCaseConfig.registrarSolicitudUseCase(
+                                solicitudGateway, validacionDocumentoGateway, tipoPrestamoGateway, notificacionGateway);
 
-    @Test
-    @DisplayName("Debe crear bean ListarSolicitudesUseCase correctamente")
-    void debeCrearBeanListarSolicitudesUseCaseCorrectamente() {
-        ListarSolicitudesUseCase useCase = useCaseConfig.listarSolicitudesUseCase(
-                solicitudGateway, validacionDocumentoGateway, tipoPrestamoGateway);
+                assertThat(useCase1)
+                                .isNotNull()
+                                .isNotSameAs(useCase2);
+                assertThat(useCase2).isNotNull();
+        }
 
-        assertThat(useCase)
-                .isNotNull()
-                .isInstanceOf(ListarSolicitudesUseCase.class);
-    }
+        @Test
+        @DisplayName("Debe crear bean ListarSolicitudesUseCase correctamente")
+        void debeCrearBeanListarSolicitudesUseCaseCorrectamente() {
+                ListarSolicitudesUseCase useCase = useCaseConfig.listarSolicitudesUseCase(
+                                solicitudGateway, validacionDocumentoGateway, tipoPrestamoGateway);
 
-    @Test
-    @DisplayName("Debe crear instancias diferentes de ListarSolicitudesUseCase en llamadas múltiples")
-    void debeCrearInstanciasDiferentesDeListarSolicitudesUseCaseEnLladasMultiples() {
-        ListarSolicitudesUseCase useCase1 = useCaseConfig.listarSolicitudesUseCase(
-                solicitudGateway, validacionDocumentoGateway, tipoPrestamoGateway);
-        ListarSolicitudesUseCase useCase2 = useCaseConfig.listarSolicitudesUseCase(
-                solicitudGateway, validacionDocumentoGateway, tipoPrestamoGateway);
+                assertThat(useCase)
+                                .isNotNull()
+                                .isInstanceOf(ListarSolicitudesUseCase.class);
+        }
 
-        assertThat(useCase1)
-                .isNotNull()
-                .isNotSameAs(useCase2);
-        assertThat(useCase2).isNotNull();
-    }
+        @Test
+        @DisplayName("Debe crear instancias diferentes de ListarSolicitudesUseCase en llamadas múltiples")
+        void debeCrearInstanciasDiferentesDeListarSolicitudesUseCaseEnLladasMultiples() {
+                ListarSolicitudesUseCase useCase1 = useCaseConfig.listarSolicitudesUseCase(
+                                solicitudGateway, validacionDocumentoGateway, tipoPrestamoGateway);
+                ListarSolicitudesUseCase useCase2 = useCaseConfig.listarSolicitudesUseCase(
+                                solicitudGateway, validacionDocumentoGateway, tipoPrestamoGateway);
 
-    @Test
-    @DisplayName("Debe inyectar correctamente las dependencias en RegistrarSolicitudUseCase")
-    void debeInyectarCorrectamenteLasDependenciasEnRegistrarSolicitudUseCase() {
-        RegistrarSolicitudUseCase useCase = useCaseConfig.registrarSolicitudUseCase(
-                solicitudGateway, validacionDocumentoGateway);
+                assertThat(useCase1)
+                                .isNotNull()
+                                .isNotSameAs(useCase2);
+                assertThat(useCase2).isNotNull();
+        }
 
-        assertThat(useCase).isNotNull();
-        
-        assertThat(useCase.getClass().getName()).contains("RegistrarSolicitudUseCase");
-    }
+        @Test
+        @DisplayName("Debe inyectar correctamente las dependencias en RegistrarSolicitudUseCase")
+        void debeInyectarCorrectamenteLasDependenciasEnRegistrarSolicitudUseCase() {
+                RegistrarSolicitudUseCase useCase = useCaseConfig.registrarSolicitudUseCase(
+                                solicitudGateway, validacionDocumentoGateway, tipoPrestamoGateway, notificacionGateway);
 
-    @Test
-    @DisplayName("Debe inyectar correctamente las dependencias en ListarSolicitudesUseCase")
-    void debeInyectarCorrectamenteLasDependenciasEnListarSolicitudesUseCase() {
-        ListarSolicitudesUseCase useCase = useCaseConfig.listarSolicitudesUseCase(
-                solicitudGateway, validacionDocumentoGateway, tipoPrestamoGateway);
+                assertThat(useCase).isNotNull();
 
-        assertThat(useCase).isNotNull();
-        
-        assertThat(useCase.getClass().getName()).contains("ListarSolicitudesUseCase");
-    }
+                assertThat(useCase.getClass().getName()).contains("RegistrarSolicitudUseCase");
+        }
+
+        @Test
+        @DisplayName("Debe inyectar correctamente las dependencias en ListarSolicitudesUseCase")
+        void debeInyectarCorrectamenteLasDependenciasEnListarSolicitudesUseCase() {
+                ListarSolicitudesUseCase useCase = useCaseConfig.listarSolicitudesUseCase(
+                                solicitudGateway, validacionDocumentoGateway, tipoPrestamoGateway);
+
+                assertThat(useCase).isNotNull();
+
+                assertThat(useCase.getClass().getName()).contains("ListarSolicitudesUseCase");
+        }
 }

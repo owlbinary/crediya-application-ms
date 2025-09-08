@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.transaction.reactive.TransactionalOperator;
@@ -24,6 +25,7 @@ import co.com.crediya.r2dbc.mapper.SolicitudEntityMapper;
 import co.com.crediya.r2dbc.repository.SolicitudRepository;
 import co.com.crediya.r2dbc.repository.TipoPrestamoRepository;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
 @ExtendWith(MockitoExtension.class)
@@ -200,6 +202,126 @@ class SolicitudRepositoryAdapterTest {
             .when(transactionalOperator).transactional(any(Mono.class));
 
         StepVerifier.create(adapter.guardar(solicitudDominio))
+            .expectError(RuntimeException.class)
+            .verify();
+    }
+
+    @Test
+    void deberiaObtenerSolicitudesPendientesRevisionPorEstadoEspecifico() {
+        int pagina = 0;
+        int tamano = 10;
+        String estado = "1";
+        LocalDateTime now = LocalDateTime.now();
+        SolicitudEntity entity = SolicitudEntity.builder()
+            .id(1)
+            .documentoIdentidad("12345678")
+            .monto(new BigDecimal("1000000"))
+            .plazo(12)
+            .idTipoPrestamo(1)
+            .idEstado(1)
+            .fechaSolicitud(now)
+            .fechaActualizacion(now)
+            .email("temp@example.com")
+            .build();
+        when(solicitudRepository.findByIdEstadoOrderByFechaSolicitudDesc(ArgumentMatchers.eq(1), ArgumentMatchers.any())).thenReturn(Flux.just(entity));
+        when(entityMapper.toDomain(entity)).thenReturn(solicitudDominio);
+        doAnswer(invocation -> invocation.getArgument(0))
+            .when(transactionalOperator).transactional(any(Flux.class));
+
+        StepVerifier.create(adapter.obtenerSolicitudesPendientesRevision(pagina, tamano, estado))
+            .expectNextMatches(s -> s.getId().equals("1"))
+            .verifyComplete();
+    }
+
+    @Test
+    void deberiaObtenerSolicitudesPendientesRevisionSinFiltroEstado() {
+        int pagina = 0;
+        int tamano = 10;
+        String estado = null;
+        LocalDateTime now = LocalDateTime.now();
+        SolicitudEntity entity = SolicitudEntity.builder()
+            .id(1)
+            .documentoIdentidad("12345678")
+            .monto(new BigDecimal("1000000"))
+            .plazo(12)
+            .idTipoPrestamo(1)
+            .idEstado(1)
+            .fechaSolicitud(now)
+            .fechaActualizacion(now)
+            .email("temp@example.com")
+            .build();
+        when(solicitudRepository.findByIdEstadoInOrderByFechaSolicitudDesc(ArgumentMatchers.anyList(), ArgumentMatchers.any())).thenReturn(Flux.just(entity));
+        when(entityMapper.toDomain(entity)).thenReturn(solicitudDominio);
+        doAnswer(invocation -> invocation.getArgument(0))
+            .when(transactionalOperator).transactional(any(Flux.class));
+
+        StepVerifier.create(adapter.obtenerSolicitudesPendientesRevision(pagina, tamano, estado))
+            .expectNextMatches(s -> s.getId().equals("1"))
+            .verifyComplete();
+    }
+
+    @Test
+    void deberiaActualizarSolicitudExitosamente() {
+        when(entityMapper.toEntity(solicitudDominio)).thenReturn(solicitudEntity);
+        when(solicitudRepository.save(solicitudEntity)).thenReturn(Mono.just(solicitudEntity));
+        when(entityMapper.toDomain(solicitudEntity)).thenReturn(solicitudDominio);
+        doAnswer(invocation -> invocation.getArgument(0))
+            .when(transactionalOperator).transactional(any(Mono.class));
+
+        StepVerifier.create(adapter.actualizar(solicitudDominio))
+            .expectNextMatches(resultado -> resultado.getId().equals("1"))
+            .verifyComplete();
+    }
+
+    @Test
+    void deberiaFallarAlActualizarSolicitud() {
+        when(entityMapper.toEntity(solicitudDominio)).thenReturn(solicitudEntity);
+        when(solicitudRepository.save(solicitudEntity)).thenReturn(Mono.error(new RuntimeException("Error update")));
+        doAnswer(invocation -> invocation.getArgument(0))
+            .when(transactionalOperator).transactional(any(Mono.class));
+
+        StepVerifier.create(adapter.actualizar(solicitudDominio))
+            .expectError(RuntimeException.class)
+            .verify();
+    }
+
+    @Test
+    void deberiaFiltrarPorEstadoAprobadoEnFindByDocumentoIdentidadAndEstado() {
+        SolicitudEntity entityAprobado = SolicitudEntity.builder().id(2).documentoIdentidad("12345678").idEstado(2).build();
+        Solicitud solicitudAprobada = Solicitud.builder().id("2").documentoIdentidad("12345678").estado(EstadoSolicitud.APROBADO).build();
+        when(solicitudRepository.findByDocumentoIdentidad("12345678")).thenReturn(Flux.just(entityAprobado));
+        when(entityMapper.toDomain(entityAprobado)).thenReturn(solicitudAprobada);
+
+        StepVerifier.create(adapter.findByDocumentoIdentidadAndEstado("12345678", EstadoSolicitud.APROBADO))
+            .expectNextMatches(s -> s.getId().equals("2") && s.getEstado() == EstadoSolicitud.APROBADO)
+            .verifyComplete();
+    }
+
+    @Test
+    void noDebeEmitirSiNoHaySolicitudesAprobadasEnFindByDocumentoIdentidadAndEstado() {
+        SolicitudEntity entityPendiente = SolicitudEntity.builder().id(3).documentoIdentidad("12345678").idEstado(1).build();
+        when(solicitudRepository.findByDocumentoIdentidad("12345678")).thenReturn(Flux.just(entityPendiente));
+
+        StepVerifier.create(adapter.findByDocumentoIdentidadAndEstado("12345678", EstadoSolicitud.APROBADO))
+            .verifyComplete();
+    }
+
+    @Test
+    void deberiaRetornarVacioSiEstadoNoEsNumericoEnObtenerSolicitudesPendientesRevision() {
+        doAnswer(invocation -> invocation.getArgument(0))
+            .when(transactionalOperator).transactional(any(Flux.class));
+
+        StepVerifier.create(adapter.obtenerSolicitudesPendientesRevision(0, 10, "no-num"))
+            .verifyComplete();
+    }
+
+    @Test
+    void deberiaManejarErrorEnObtenerSolicitudesPendientesRevision() {
+        when(solicitudRepository.findByIdEstadoOrderByFechaSolicitudDesc(anyInt(), any())).thenReturn(Flux.error(new RuntimeException("Error DB")));
+        doAnswer(invocation -> invocation.getArgument(0))
+            .when(transactionalOperator).transactional(any(Flux.class));
+
+        StepVerifier.create(adapter.obtenerSolicitudesPendientesRevision(0, 10, "1"))
             .expectError(RuntimeException.class)
             .verify();
     }

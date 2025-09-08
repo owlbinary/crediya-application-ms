@@ -38,12 +38,12 @@ class TipoPrestamoTest {
         TipoPrestamo tipoPrestamo = new TipoPrestamo(
                 "2", "Préstamo Hipotecario", "Préstamo para compra de vivienda",
                 BigDecimal.valueOf(10000000), BigDecimal.valueOf(500000000),
-                120, 360, BigDecimal.valueOf(0.8), true
+                120, 360, BigDecimal.valueOf(0.8), true, false
         );
 
         assertThat(tipoPrestamo)
-                .extracting("id", "nombre", "descripcion", "activo")
-                .containsExactly("2", "Préstamo Hipotecario", "Préstamo para compra de vivienda", true);
+                .extracting("id", "nombre", "descripcion", "activo", "validacionAutomatica")
+                .containsExactly("2", "Préstamo Hipotecario", "Préstamo para compra de vivienda", true, false);
     }
 
     @Test

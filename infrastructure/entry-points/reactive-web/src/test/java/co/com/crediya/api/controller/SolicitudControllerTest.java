@@ -1,5 +1,6 @@
 package co.com.crediya.api.controller;
 
+import co.com.crediya.api.dto.request.ActualizarEstadoSolicitudRequest.PlanPagoCuota;
 import co.com.crediya.api.dto.request.SolicitudRequest;
 import co.com.crediya.api.dto.response.SolicitudConDetalleResponse;
 import co.com.crediya.api.dto.response.SolicitudResponse;
@@ -12,6 +13,7 @@ import co.com.crediya.model.exception.DatosInvalidosException;
 import co.com.crediya.model.exception.DocumentoNoValidoException;
 import co.com.crediya.model.exception.InfraestructuraException;
 import co.com.crediya.model.exception.TipoPrestamoNoExisteException;
+import co.com.crediya.usecase.actualizarestadosolicitud.ActualizarEstadoSolicitudUseCase;
 import co.com.crediya.usecase.listarsolicitudes.ListarSolicitudesUseCase;
 import co.com.crediya.usecase.listarsolicitudes.SolicitudConDetalle;
 import co.com.crediya.usecase.registrarsolicitud.RegistrarSolicitudUseCase;
@@ -39,6 +41,8 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class SolicitudControllerTest {
+    @Mock
+    private ActualizarEstadoSolicitudUseCase actualizarEstadoSolicitudUseCase;
 
     @Mock
     private RegistrarSolicitudUseCase registrarSolicitudUseCase;
@@ -224,12 +228,12 @@ class SolicitudControllerTest {
 
     @Test
     void deberiaListarSolicitudesPendientesExitosamente() {
-        when(listarSolicitudesUseCase.ejecutar(anyInt(), anyInt(), anyString()))
+        when(listarSolicitudesUseCase.ejecutar(anyInt(), anyInt(), anyString(), anyString()))
             .thenReturn(Flux.just(solicitudConDetalle));
         when(solicitudConDetalleMapper.toResponse(any(SolicitudConDetalle.class)))
             .thenReturn(solicitudConDetalleResponse);
 
-        StepVerifier.create(solicitudController.listarSolicitudesPendientes(0, 10, "Bearer token", mockAuthentication))
+        StepVerifier.create(solicitudController.listarSolicitudesPendientes(0, 10, "1","Bearer token", mockAuthentication))
             .expectNextMatches(response -> 
                 response.getId().equals("1") &&
                 response.getDocumentoIdentidad().equals("12345678") &&
@@ -246,43 +250,43 @@ class SolicitudControllerTest {
 
     @Test
     void deberiaListarSolicitudesPendientesSinToken() {
-        when(listarSolicitudesUseCase.ejecutar(anyInt(), anyInt(), isNull()))
+        when(listarSolicitudesUseCase.ejecutar(anyInt(), anyInt(), anyString(), isNull()))
             .thenReturn(Flux.just(solicitudConDetalle));
         when(solicitudConDetalleMapper.toResponse(any(SolicitudConDetalle.class)))
             .thenReturn(solicitudConDetalleResponse);
 
-        StepVerifier.create(solicitudController.listarSolicitudesPendientes(0, 10, null, mockAuthentication))
+        StepVerifier.create(solicitudController.listarSolicitudesPendientes(0, 10, "1",null, mockAuthentication))
             .expectNextMatches(response -> response.getId().equals("1"))
             .verifyComplete();
     }
 
     @Test
     void deberiaListarSolicitudesPendientesConParametrosPersonalizados() {
-        when(listarSolicitudesUseCase.ejecutar(eq(2), eq(5), anyString()))
+        when(listarSolicitudesUseCase.ejecutar(eq(2), eq(5), anyString(), anyString()))
             .thenReturn(Flux.just(solicitudConDetalle));
         when(solicitudConDetalleMapper.toResponse(any(SolicitudConDetalle.class)))
             .thenReturn(solicitudConDetalleResponse);
 
-        StepVerifier.create(solicitudController.listarSolicitudesPendientes(2, 5, "Bearer token", mockAuthentication))
+        StepVerifier.create(solicitudController.listarSolicitudesPendientes(2, 5, "1","Bearer token", mockAuthentication))
             .expectNextMatches(response -> response.getId().equals("1"))
             .verifyComplete();
     }
 
     @Test
     void deberiaListarSolicitudesPendientesVacia() {
-        when(listarSolicitudesUseCase.ejecutar(anyInt(), anyInt(), anyString()))
+        when(listarSolicitudesUseCase.ejecutar(anyInt(), anyInt(), anyString(), anyString()))
             .thenReturn(Flux.empty());
 
-        StepVerifier.create(solicitudController.listarSolicitudesPendientes(0, 10, "Bearer token", mockAuthentication))
+        StepVerifier.create(solicitudController.listarSolicitudesPendientes(0, 10, "1","Bearer token", mockAuthentication))
             .verifyComplete();
     }
 
     @Test
     void deberiaFallarCuandoErrorEnListarSolicitudes() {
-        when(listarSolicitudesUseCase.ejecutar(anyInt(), anyInt(), anyString()))
+        when(listarSolicitudesUseCase.ejecutar(anyInt(), anyInt(), anyString(), anyString()))
             .thenReturn(Flux.error(new InfraestructuraException("Error de infraestructura")));
 
-        StepVerifier.create(solicitudController.listarSolicitudesPendientes(0, 10, "Bearer token", mockAuthentication))
+        StepVerifier.create(solicitudController.listarSolicitudesPendientes(0, 10, "1", "Bearer token", mockAuthentication))
             .expectError(InfraestructuraException.class)
             .verify();
     }
@@ -326,16 +330,68 @@ class SolicitudControllerTest {
             .deudaTotalMensualSolicitud(new BigDecimal("300000"))
             .build();
 
-        when(listarSolicitudesUseCase.ejecutar(anyInt(), anyInt(), anyString()))
+        when(listarSolicitudesUseCase.ejecutar(anyInt(), anyInt(), anyString(), anyString()))
             .thenReturn(Flux.just(solicitudConDetalle, solicitud2));
         when(solicitudConDetalleMapper.toResponse(solicitudConDetalle))
             .thenReturn(solicitudConDetalleResponse);
         when(solicitudConDetalleMapper.toResponse(solicitud2))
             .thenReturn(response2);
 
-        StepVerifier.create(solicitudController.listarSolicitudesPendientes(0, 10, "Bearer token", mockAuthentication))
+        StepVerifier.create(solicitudController.listarSolicitudesPendientes(0, 10, "1","Bearer token", mockAuthentication))
             .expectNextMatches(response -> response.getId().equals("1"))
             .expectNextMatches(response -> response.getId().equals("2"))
             .verifyComplete();
+    }
+
+    @Test
+    void deberiaActualizarEstadoSolicitudExitosamente() {
+    co.com.crediya.api.dto.request.ActualizarEstadoSolicitudRequest request = co.com.crediya.api.dto.request.ActualizarEstadoSolicitudRequest.builder()
+        .nuevoEstado("APROBADO")
+        .justificacion("Aprobado por política")
+        .planPago(null)
+        .build();
+    when(actualizarEstadoSolicitudUseCase.ejecutar(anyString(), anyString(), anyString(), anyString(), any()))
+        .thenReturn(Mono.just(solicitudDominio));
+    when(solicitudMapper.toResponse(any(Solicitud.class))).thenReturn(solicitudResponse);
+    StepVerifier.create(solicitudController.actualizarEstadoSolicitud("1", request, "Bearer token", mockAuthentication))
+        .expectNextMatches(response -> response.getId().equals("1") && response.getEstado().equals("PENDIENTE_REVISION"))
+        .verifyComplete();
+    }
+
+    @Test
+    void deberiaActualizarEstadoSolicitudConPlanPago() {
+    List<PlanPagoCuota> planPago = new ArrayList<>();
+    planPago.add(PlanPagoCuota.builder()
+        .numeroCuota(1)
+        .cuota(1000.0)
+        .abonoCapital(800.0)
+        .interes(200.0)
+        .saldoRestante(0.0)
+        .build());
+    co.com.crediya.api.dto.request.ActualizarEstadoSolicitudRequest request = co.com.crediya.api.dto.request.ActualizarEstadoSolicitudRequest.builder()
+        .nuevoEstado("APROBADO")
+        .justificacion("Aprobado con plan de pago")
+        .planPago(planPago)
+        .build();
+    when(actualizarEstadoSolicitudUseCase.ejecutar(anyString(), anyString(), anyString(), anyString(), any()))
+        .thenReturn(Mono.just(solicitudDominio));
+    when(solicitudMapper.toResponse(any(Solicitud.class))).thenReturn(solicitudResponse);
+    StepVerifier.create(solicitudController.actualizarEstadoSolicitud("1", request, "Bearer token", mockAuthentication))
+        .expectNextMatches(response -> response.getId().equals("1"))
+        .verifyComplete();
+    }
+
+    @Test
+    void deberiaFallarActualizarEstadoSolicitudPorExcepcion() {
+    co.com.crediya.api.dto.request.ActualizarEstadoSolicitudRequest request = co.com.crediya.api.dto.request.ActualizarEstadoSolicitudRequest.builder()
+        .nuevoEstado("RECHAZADO")
+        .justificacion("No cumple requisitos")
+        .planPago(null)
+        .build();
+    when(actualizarEstadoSolicitudUseCase.ejecutar(anyString(), anyString(), anyString(), anyString(), any()))
+        .thenReturn(Mono.error(new RuntimeException("Error al actualizar estado")));
+    StepVerifier.create(solicitudController.actualizarEstadoSolicitud("1", request, "Bearer token", mockAuthentication))
+        .expectError(RuntimeException.class)
+        .verify();
     }
 }

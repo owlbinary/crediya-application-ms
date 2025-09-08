@@ -18,7 +18,6 @@ public interface SolicitudEntityMapper {
     @Mapping(target = "deudaTotalMensual", source = "deudaTotalMensualSolicitudesAprobadas")
     Solicitud toDomain(SolicitudEntity entidad);
 
-    @Mapping(target = "id", ignore = true)
     @Mapping(target = "idEstado", source = "estado", qualifiedByName = "domainEstadoToEntityEstado")
     @Mapping(target = "idTipoPrestamo", source = "tipoPrestamoId", qualifiedByName = "domainTipoPrestamoToEntityTipoPrestamo")
     @Mapping(target = "fechaSolicitud", source = "fechaCreacion")

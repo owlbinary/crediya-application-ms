@@ -1,6 +1,7 @@
 package co.com.crediya.config;
 
 import co.com.crediya.model.gateway.SolicitudGateway;
+import co.com.crediya.model.gateway.NotificacionGateway;
 import co.com.crediya.model.gateway.TipoPrestamoGateway;
 import co.com.crediya.model.gateway.ValidacionDocumentoGateway;
 import co.com.crediya.usecase.listarsolicitudes.ListarSolicitudesUseCase;
@@ -18,6 +19,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UseCasesConfig - Configuración de Escaneo de Casos de Uso")
 class UseCasesConfigTest {
+    @Mock
+    private NotificacionGateway notificacionGateway;
 
     @Mock
     private SolicitudGateway solicitudGateway;
@@ -35,9 +38,10 @@ class UseCasesConfigTest {
         context = new AnnotationConfigApplicationContext();
         context.register(UseCasesConfig.class);
 
-        context.getBeanFactory().registerSingleton("solicitudGateway", solicitudGateway);
-        context.getBeanFactory().registerSingleton("validacionDocumentoGateway", validacionDocumentoGateway);
-        context.getBeanFactory().registerSingleton("tipoPrestamoGateway", tipoPrestamoGateway);
+    context.getBeanFactory().registerSingleton("solicitudGateway", solicitudGateway);
+    context.getBeanFactory().registerSingleton("validacionDocumentoGateway", validacionDocumentoGateway);
+    context.getBeanFactory().registerSingleton("tipoPrestamoGateway", tipoPrestamoGateway);
+    context.getBeanFactory().registerSingleton("notificacionGateway", notificacionGateway);
         
         context.refresh();
     }

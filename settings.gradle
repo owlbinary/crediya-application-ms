@@ -26,3 +26,5 @@ include ':r2dbc-postgresql'
 project(':r2dbc-postgresql').projectDir = file('./infrastructure/driven-adapters/r2dbc-postgresql')
 include ':validacion-documento'
 project(':validacion-documento').projectDir = file('./infrastructure/driven-adapters/validacion-documento')
+include ':sqs'
+project(':sqs').projectDir = file('./infrastructure/driven-adapters/sqs')

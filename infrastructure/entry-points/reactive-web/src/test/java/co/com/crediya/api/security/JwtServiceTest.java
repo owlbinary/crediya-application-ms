@@ -121,4 +121,49 @@ class JwtServiceTest {
         
         assertThat(resultado).isFalse();
     }
+
+    @Test
+    @DisplayName("Debe devolver ROLE_USER si idRol no existe")
+    void debeDevolverRoleUserSiIdRolNoExiste() {
+        Date fechaExpiracion = new Date(System.currentTimeMillis() + 3600000);
+        String tokenSinIdRol = Jwts.builder()
+                .subject("test@ejemplo.com")
+                .issuedAt(new Date())
+                .expiration(fechaExpiracion)
+                .signWith(secretKey)
+                .compact();
+        Collection<GrantedAuthority> autoridades = jwtService.extraerAutoridades(tokenSinIdRol);
+        assertThat(autoridades).hasSize(1);
+        assertThat(autoridades.iterator().next().getAuthority()).isEqualTo("ROLE_USER");
+    }
+
+    @Test
+    @DisplayName("Debe devolver null si claim no existe")
+    void debeDevolverNullSiClaimNoExiste() {
+        Date fechaExpiracion = new Date(System.currentTimeMillis() + 3600000);
+        String tokenSinNombre = Jwts.builder()
+                .subject("test@ejemplo.com")
+                .issuedAt(new Date())
+                .expiration(fechaExpiracion)
+                .signWith(secretKey)
+                .compact();
+        String nombre = jwtService.extraerNombre(tokenSinNombre);
+        assertThat(nombre).isNull();
+    }
+
+    @Test
+    @DisplayName("Debe devolver ROLE_USER si idRol es null")
+    void debeDevolverRoleUserSiIdRolEsNull() {
+        Date fechaExpiracion = new Date(System.currentTimeMillis() + 3600000);
+        String tokenIdRolNull = Jwts.builder()
+                .subject("test@ejemplo.com")
+                .claim("idRol", (Object) null)
+                .issuedAt(new Date())
+                .expiration(fechaExpiracion)
+                .signWith(secretKey)
+                .compact();
+        Collection<GrantedAuthority> autoridades = jwtService.extraerAutoridades(tokenIdRolNull);
+        assertThat(autoridades).hasSize(1);
+        assertThat(autoridades.iterator().next().getAuthority()).isEqualTo("ROLE_USER");
+    }
 }

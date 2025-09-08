@@ -19,6 +19,8 @@ public interface SolicitudRepository extends ReactiveCrudRepository<SolicitudEnt
     Mono<Long> countByDocumentoIdentidad(String documentoIdentidad);
     
     Flux<SolicitudEntity> findByIdEstadoInOrderByFechaSolicitudDesc(List<Integer> idEstados, Pageable pageable);
+
+    Flux<SolicitudEntity> findByIdEstadoOrderByFechaSolicitudDesc(Integer idEstado, Pageable pageable);
     
     Mono<Long> countByIdEstadoIn(List<Integer> idEstados);
 }

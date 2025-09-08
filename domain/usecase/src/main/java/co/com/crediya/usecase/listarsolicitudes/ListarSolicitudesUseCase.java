@@ -17,8 +17,8 @@ public class ListarSolicitudesUseCase {
     private final ValidacionDocumentoGateway validacionDocumentoGateway;
     private final TipoPrestamoGateway tipoPrestamoGateway;
     
-    public Flux<SolicitudConDetalle> ejecutar(int pagina, int tamano, String authorizationToken) {
-        return solicitudGateway.obtenerSolicitudesPendientesRevision(pagina, tamano)
+    public Flux<SolicitudConDetalle> ejecutar(int pagina, int tamano, String estado, String authorizationToken) {
+        return solicitudGateway.obtenerSolicitudesPendientesRevision(pagina, tamano, estado)
                 .flatMap(solicitud -> enriquecerConDetalles(solicitud, authorizationToken));
     }
     

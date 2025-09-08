@@ -13,12 +13,61 @@ import co.com.crediya.model.exception.AutenticacionException;
 import co.com.crediya.model.exception.DocumentoNoValidoException;
 import co.com.crediya.model.exception.InfraestructuraException;
 import co.com.crediya.model.exception.TipoPrestamoNoExisteException;
-import lombok.extern.slf4j.Slf4j;
+import co.com.crediya.model.exception.TokenInvalidoException;
+import co.com.crediya.model.exception.SolicitudNoEncontradaException;
+import co.com.crediya.model.exception.EstadoSolicitudNoValidoException;
+import co.com.crediya.model.exception.NotificacionEstadoException;
+
 import reactor.core.publisher.Mono;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(TokenInvalidoException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public Mono<ErrorResponse> procesarTokenInvalido(TokenInvalidoException excepcion, ServerWebExchange intercambio) {
+        log.warn("Token inválido o expirado: {}", excepcion.getMessage());
+        return Mono.just(ErrorResponse.of(
+            ErrorCodes.TOKEN_INVALIDO,
+            excepcion.getMessage(),
+            intercambio.getRequest().getPath().value()
+        ));
+    }
+
+    @ExceptionHandler(SolicitudNoEncontradaException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Mono<ErrorResponse> procesarSolicitudNoEncontrada(SolicitudNoEncontradaException excepcion, ServerWebExchange intercambio) {
+        log.warn("Solicitud no encontrada: {}", excepcion.getMessage());
+        return Mono.just(ErrorResponse.of(
+            ErrorCodes.SOLICITUD_NO_ENCONTRADA,
+            excepcion.getMessage(),
+            intercambio.getRequest().getPath().value()
+        ));
+    }
+
+    @ExceptionHandler(EstadoSolicitudNoValidoException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Mono<ErrorResponse> procesarEstadoSolicitudNoValido(EstadoSolicitudNoValidoException excepcion, ServerWebExchange intercambio) {
+        log.warn("Estado de solicitud no válido: {}", excepcion.getMessage());
+        return Mono.just(ErrorResponse.of(
+            ErrorCodes.ESTADO_SOLICITUD_NO_VALIDO,
+            excepcion.getMessage(),
+            intercambio.getRequest().getPath().value()
+        ));
+    }
+
+    @ExceptionHandler(NotificacionEstadoException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public Mono<ErrorResponse> procesarErrorNotificacionEstado(NotificacionEstadoException excepcion, ServerWebExchange intercambio) {
+        log.error("Error notificando estado de solicitud: {}", excepcion.getMessage());
+        return Mono.just(ErrorResponse.of(
+            ErrorCodes.ERROR_NOTIFICACION_ESTADO,
+            excepcion.getMessage(),
+            intercambio.getRequest().getPath().value()
+        ));
+    }
     @ExceptionHandler(TipoPrestamoNoExisteException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Mono<ErrorResponse> procesarTipoPrestamoInexistente(TipoPrestamoNoExisteException excepcion, ServerWebExchange intercambio) {

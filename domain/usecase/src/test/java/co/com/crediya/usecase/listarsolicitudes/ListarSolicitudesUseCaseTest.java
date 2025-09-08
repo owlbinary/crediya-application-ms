@@ -80,14 +80,14 @@ class ListarSolicitudesUseCaseTest {
 
     @Test
     void deberiaListarSolicitudesConDetallesCompletos() {
-        when(solicitudGateway.obtenerSolicitudesPendientesRevision(anyInt(), anyInt()))
+        when(solicitudGateway.obtenerSolicitudesPendientesRevision(anyInt(), anyInt(), anyString()))
                 .thenReturn(Flux.just(solicitudPrueba));
         when(validacionDocumentoGateway.obtenerDetalleUsuario(anyString(), anyString()))
                 .thenReturn(Mono.just(detalleUsuarioPrueba));
         when(tipoPrestamoGateway.buscarPorId(anyString()))
                 .thenReturn(Mono.just(tipoPresamoPrueba));
 
-        StepVerifier.create(useCase.ejecutar(0, 10, authorizationToken))
+        StepVerifier.create(useCase.ejecutar(0, 10, "1", authorizationToken))
                 .expectNextMatches(solicitudDetalle ->
                         solicitudDetalle.getId().equals("1") &&
                         solicitudDetalle.getDocumentoIdentidad().equals("12345678") &&
@@ -108,14 +108,14 @@ class ListarSolicitudesUseCaseTest {
 
     @Test
     void deberiaListarSolicitudesCuandoNoHayDetalleUsuario() {
-        when(solicitudGateway.obtenerSolicitudesPendientesRevision(anyInt(), anyInt()))
+        when(solicitudGateway.obtenerSolicitudesPendientesRevision(anyInt(), anyInt(), anyString()))
                 .thenReturn(Flux.just(solicitudPrueba));
         when(validacionDocumentoGateway.obtenerDetalleUsuario(anyString(), anyString()))
                 .thenReturn(Mono.empty());
         when(tipoPrestamoGateway.buscarPorId(anyString()))
                 .thenReturn(Mono.just(tipoPresamoPrueba));
 
-        StepVerifier.create(useCase.ejecutar(0, 10, authorizationToken))
+        StepVerifier.create(useCase.ejecutar(0, 10, "1", authorizationToken))
                 .expectNextMatches(solicitudDetalle ->
                         solicitudDetalle.getId().equals("1") &&
                         solicitudDetalle.getDescripcionTipoPrestamo().equals("Préstamo Personal") &&
@@ -129,14 +129,14 @@ class ListarSolicitudesUseCaseTest {
 
     @Test
     void deberiaListarSolicitudesCuandoNoHayTipoPrestamo() {
-        when(solicitudGateway.obtenerSolicitudesPendientesRevision(anyInt(), anyInt()))
+        when(solicitudGateway.obtenerSolicitudesPendientesRevision(anyInt(), anyInt(), anyString()))
                 .thenReturn(Flux.just(solicitudPrueba));
         when(validacionDocumentoGateway.obtenerDetalleUsuario(anyString(), anyString()))
                 .thenReturn(Mono.just(detalleUsuarioPrueba));
         when(tipoPrestamoGateway.buscarPorId(anyString()))
                 .thenReturn(Mono.empty());
 
-        StepVerifier.create(useCase.ejecutar(0, 10, authorizationToken))
+        StepVerifier.create(useCase.ejecutar(0, 10, "1", authorizationToken))
                 .expectNextMatches(solicitudDetalle ->
                         solicitudDetalle.getId().equals("1") &&
                         solicitudDetalle.getEmail().equals("test@test.com") &&
@@ -148,14 +148,14 @@ class ListarSolicitudesUseCaseTest {
 
     @Test
     void deberiaListarSolicitudesCuandoFallaServicioDetalleUsuario() {
-        when(solicitudGateway.obtenerSolicitudesPendientesRevision(anyInt(), anyInt()))
+        when(solicitudGateway.obtenerSolicitudesPendientesRevision(anyInt(), anyInt(), anyString()))
                 .thenReturn(Flux.just(solicitudPrueba));
         when(validacionDocumentoGateway.obtenerDetalleUsuario(anyString(), anyString()))
                 .thenReturn(Mono.error(new RuntimeException("Error al consultar detalle usuario")));
         when(tipoPrestamoGateway.buscarPorId(anyString()))
                 .thenReturn(Mono.just(tipoPresamoPrueba));
 
-        StepVerifier.create(useCase.ejecutar(0, 10, authorizationToken))
+        StepVerifier.create(useCase.ejecutar(0, 10, "1",authorizationToken))
                 .expectNextMatches(solicitudDetalle ->
                         solicitudDetalle.getId().equals("1") &&
                         solicitudDetalle.getDescripcionTipoPrestamo().equals("Préstamo Personal") &&
@@ -167,14 +167,14 @@ class ListarSolicitudesUseCaseTest {
 
     @Test
     void deberiaListarSolicitudesCuandoFallaServicioTipoPrestamo() {
-        when(solicitudGateway.obtenerSolicitudesPendientesRevision(anyInt(), anyInt()))
+        when(solicitudGateway.obtenerSolicitudesPendientesRevision(anyInt(), anyInt(), anyString()))
                 .thenReturn(Flux.just(solicitudPrueba));
         when(validacionDocumentoGateway.obtenerDetalleUsuario(anyString(), anyString()))
                 .thenReturn(Mono.just(detalleUsuarioPrueba));
         when(tipoPrestamoGateway.buscarPorId(anyString()))
                 .thenReturn(Mono.error(new RuntimeException("Error al consultar tipo préstamo")));
 
-        StepVerifier.create(useCase.ejecutar(0, 10, authorizationToken))
+        StepVerifier.create(useCase.ejecutar(0, 10, "1",authorizationToken))
                 .expectNextMatches(solicitudDetalle ->
                         solicitudDetalle.getId().equals("1") &&
                         solicitudDetalle.getEmail().equals("test@test.com") &&
@@ -186,10 +186,10 @@ class ListarSolicitudesUseCaseTest {
 
     @Test
     void deberiaRetornarFluxVacioCuandoNoHaySolicitudes() {
-        when(solicitudGateway.obtenerSolicitudesPendientesRevision(anyInt(), anyInt()))
+        when(solicitudGateway.obtenerSolicitudesPendientesRevision(anyInt(), anyInt(), anyString()))
                 .thenReturn(Flux.empty());
 
-        StepVerifier.create(useCase.ejecutar(0, 10, authorizationToken))
+        StepVerifier.create(useCase.ejecutar(0, 10, "1",authorizationToken))
                 .verifyComplete();
     }
 
@@ -206,28 +206,28 @@ class ListarSolicitudesUseCaseTest {
                 .fechaActualizacion(LocalDateTime.now())
                 .build();
 
-        when(solicitudGateway.obtenerSolicitudesPendientesRevision(anyInt(), anyInt()))
+        when(solicitudGateway.obtenerSolicitudesPendientesRevision(anyInt(), anyInt(), anyString()))
                 .thenReturn(Flux.just(solicitudPrueba, segundaSolicitud));
         when(validacionDocumentoGateway.obtenerDetalleUsuario(anyString(), anyString()))
                 .thenReturn(Mono.just(detalleUsuarioPrueba));
         when(tipoPrestamoGateway.buscarPorId(anyString()))
                 .thenReturn(Mono.just(tipoPresamoPrueba));
 
-        StepVerifier.create(useCase.ejecutar(0, 10, authorizationToken))
+        StepVerifier.create(useCase.ejecutar(0, 10, "1", authorizationToken))
                 .expectNextCount(2)
                 .verifyComplete();
     }
 
     @Test
     void deberiaManejarTokenNulo() {
-        when(solicitudGateway.obtenerSolicitudesPendientesRevision(anyInt(), anyInt()))
+        when(solicitudGateway.obtenerSolicitudesPendientesRevision(anyInt(), anyInt(), anyString()))
                 .thenReturn(Flux.just(solicitudPrueba));
         when(validacionDocumentoGateway.obtenerDetalleUsuario(anyString(), eq(null)))
                 .thenReturn(Mono.just(detalleUsuarioPrueba));
         when(tipoPrestamoGateway.buscarPorId(anyString()))
                 .thenReturn(Mono.just(tipoPresamoPrueba));
 
-        StepVerifier.create(useCase.ejecutar(0, 10, null))
+        StepVerifier.create(useCase.ejecutar(0, 10, "1",null))
                 .expectNextMatches(solicitudDetalle ->
                         solicitudDetalle.getId().equals("1") &&
                         solicitudDetalle.getEmail().equals("test@test.com")

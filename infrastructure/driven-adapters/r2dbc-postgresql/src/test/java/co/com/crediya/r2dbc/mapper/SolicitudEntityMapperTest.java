@@ -65,8 +65,8 @@ class SolicitudEntityMapperTest {
 
         SolicitudEntity entity = mapper.toEntity(domain);
 
-        assertThat(entity).isNotNull();
-        assertThat(entity.getId()).isNull();
+    assertThat(entity).isNotNull();
+    assertThat(entity.getId()).isEqualTo(456);
         assertThat(entity.getDocumentoIdentidad()).isEqualTo("87654321");
         assertThat(entity.getMonto()).isEqualTo(new BigDecimal("2000000"));
         assertThat(entity.getPlazo()).isEqualTo(36);

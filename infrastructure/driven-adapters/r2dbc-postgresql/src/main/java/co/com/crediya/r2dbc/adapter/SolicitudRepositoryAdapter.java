@@ -125,17 +125,47 @@ public class SolicitudRepositoryAdapter implements SolicitudGateway {
     }
 
     @Override
-    public Flux<Solicitud> obtenerSolicitudesPendientesRevision(int pagina, int tamano) {
-        log.debug("Obteniendo solicitudes pendientes de revisión - página: {}, tamaño: {}", pagina, tamano);
-        
+    public Flux<Solicitud> obtenerSolicitudesPendientesRevision(int pagina, int tamano, String estado) {
+        log.debug("Obteniendo solicitudes pendientes de revisión - página: {}, tamaño: {}, estado: {}", pagina, tamano, estado);
         Pageable pageable = PageRequest.of(pagina, tamano);
-        List<Integer> estadosPendientes = List.of(1, 4); // PENDIENTE_REVISION, REVISION_MANUAL
-        
-        return solicitudRepository.findByIdEstadoInOrderByFechaSolicitudDesc(estadosPendientes, pageable)
-            .map(entityMapper::toDomain)
+        Flux<Solicitud> resultado;
+        if (estado != null && !estado.isBlank()) {
+            try {
+                int estadoInt = Integer.parseInt(estado);
+                resultado = solicitudRepository.findByIdEstadoOrderByFechaSolicitudDesc(estadoInt, pageable)
+                    .map(entityMapper::toDomain);
+            } catch (NumberFormatException e) {
+                log.warn("El parámetro 'estado' no es un número válido: {}", estado);
+                resultado = Flux.empty();
+            }
+        } else {
+            List<Integer> estadosPendientes = List.of(1, 4); // PENDIENTE_REVISION, REVISION_MANUAL
+            resultado = solicitudRepository.findByIdEstadoInOrderByFechaSolicitudDesc(estadosPendientes, pageable)
+                .map(entityMapper::toDomain);
+        }
+        return resultado
             .as(transactionalOperator::transactional)
             .doOnNext(solicitud -> log.debug("Solicitud pendiente recuperada: {}", solicitud.getId()))
             .doOnError(excepcion -> 
                 log.error("Error obteniendo solicitudes pendientes: {}", excepcion.getMessage()));
+    }
+
+    @Override
+    public Mono<Solicitud> actualizar(Solicitud solicitud) {
+        return Mono.just(solicitud)
+            .map(entityMapper::toEntity)
+            .flatMap(solicitudRepository::save)
+            .map(entityMapper::toDomain)
+            .as(transactionalOperator::transactional)
+            .doOnSuccess(resultado -> log.info("Solicitud actualizada exitosamente: {}", resultado.getId()))
+            .doOnError(excepcion -> log.error("Error al actualizar solicitud: {}", excepcion.getMessage(), excepcion));
+    }
+
+    @Override
+    public Flux<Solicitud> findByDocumentoIdentidadAndEstado(String documentoIdentidad, co.com.crediya.model.EstadoSolicitud estado) {
+        final Integer idEstadoAprobado = 2; //Aprobado
+        return solicitudRepository.findByDocumentoIdentidad(documentoIdentidad)
+            .filter(entity -> entity.getIdEstado() != null && entity.getIdEstado().equals(idEstadoAprobado))
+            .map(entityMapper::toDomain);
     }
 }

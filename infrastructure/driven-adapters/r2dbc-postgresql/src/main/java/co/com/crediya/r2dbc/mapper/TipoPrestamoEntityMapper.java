@@ -14,12 +14,13 @@ public interface TipoPrestamoEntityMapper {
     @Mapping(target = "descripcion", source = "nombre")
     @Mapping(target = "plazoMinimoMeses", ignore = true)
     @Mapping(target = "plazoMaximoMeses", ignore = true)
+    @Mapping(target = "validacionAutomatica", source = "validacionAutomatica")
     TipoPrestamo toDomain(TipoPrestamoEntity entity);
 
     @Mapping(target = "id", expression = "java(tipoPrestamo.getId() != null ? Integer.valueOf(tipoPrestamo.getId()) : null)")
     @Mapping(target = "nombre", source = "descripcion")
     @Mapping(target = "fechaCreacion", ignore = true)
     @Mapping(target = "fechaActualizacion", ignore = true)
-    @Mapping(target = "validacionAutomatica", ignore = true)
+    @Mapping(target = "validacionAutomatica", source = "validacionAutomatica")
     TipoPrestamoEntity toEntity(TipoPrestamo tipoPrestamo);
 }

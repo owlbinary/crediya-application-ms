@@ -129,4 +129,79 @@ class GlobalExceptionHandlerTest {
         assertThat(errorResponse.getPath()).isEqualTo("/test/path");
         assertThat(errorResponse.getTimestamp()).isNotNull();
     }
+
+        @Test
+    void deberiaProcesarTokenInvalido() {
+        co.com.crediya.model.exception.TokenInvalidoException excepcion = new co.com.crediya.model.exception.TokenInvalidoException("Token expirado");
+        StepVerifier.create(globalExceptionHandler.procesarTokenInvalido(excepcion, exchange))
+            .expectNextMatches(errorResponse -> {
+                assertThat(errorResponse.getCodigo()).isEqualTo("TOKEN_INVALIDO");
+                assertThat(errorResponse.getMensaje()).isEqualTo("Token expirado");
+                assertThat(errorResponse.getPath()).isEqualTo("/api/v1/solicitudes");
+                assertThat(errorResponse.getTimestamp()).isNotNull();
+                return true;
+            })
+            .verifyComplete();
+    }
+
+    @Test
+    void deberiaProcesarSolicitudNoEncontrada() {
+        co.com.crediya.model.exception.SolicitudNoEncontradaException excepcion = new co.com.crediya.model.exception.SolicitudNoEncontradaException("No encontrada");
+        StepVerifier.create(globalExceptionHandler.procesarSolicitudNoEncontrada(excepcion, exchange))
+            .expectNextMatches(errorResponse -> {
+                assertThat(errorResponse.getCodigo()).isEqualTo("SOLICITUD_NO_ENCONTRADA");
+                assertThat(errorResponse.getMensaje()).isEqualTo("No encontrada");
+                assertThat(errorResponse.getPath()).isEqualTo("/api/v1/solicitudes");
+                assertThat(errorResponse.getTimestamp()).isNotNull();
+                return true;
+            })
+            .verifyComplete();
+    }
+
+    @Test
+    void deberiaProcesarEstadoSolicitudNoValido() {
+        co.com.crediya.model.exception.EstadoSolicitudNoValidoException excepcion = new co.com.crediya.model.exception.EstadoSolicitudNoValidoException("Estado no válido");
+        StepVerifier.create(globalExceptionHandler.procesarEstadoSolicitudNoValido(excepcion, exchange))
+            .expectNextMatches(errorResponse -> {
+                assertThat(errorResponse.getCodigo()).isEqualTo("ESTADO_SOLICITUD_NO_VALIDO");
+                assertThat(errorResponse.getMensaje()).isEqualTo("Estado no válido");
+                assertThat(errorResponse.getPath()).isEqualTo("/api/v1/solicitudes");
+                assertThat(errorResponse.getTimestamp()).isNotNull();
+                return true;
+            })
+            .verifyComplete();
+    }
+
+    @Test
+    void deberiaProcesarErrorNotificacionEstado() {
+        co.com.crediya.model.exception.NotificacionEstadoException excepcion = new co.com.crediya.model.exception.NotificacionEstadoException("Error notificando");
+        StepVerifier.create(globalExceptionHandler.procesarErrorNotificacionEstado(excepcion, exchange))
+            .expectNextMatches(errorResponse -> {
+                assertThat(errorResponse.getCodigo()).isEqualTo("ERROR_NOTIFICACION_ESTADO");
+                assertThat(errorResponse.getMensaje()).isEqualTo("Error notificando");
+                assertThat(errorResponse.getPath()).isEqualTo("/api/v1/solicitudes");
+                assertThat(errorResponse.getTimestamp()).isNotNull();
+                return true;
+            })
+            .verifyComplete();
+    }
+
+    @Test
+    void deberiaProcesarErroresValidacion() {
+        org.springframework.web.bind.support.WebExchangeBindException excepcion = org.mockito.Mockito.mock(org.springframework.web.bind.support.WebExchangeBindException.class);
+        java.util.List<org.springframework.validation.FieldError> fieldErrors = java.util.Collections.singletonList(
+            new org.springframework.validation.FieldError("objectName", "field", "Mensaje de error de validación")
+        );
+        org.mockito.Mockito.when(excepcion.getFieldErrors()).thenReturn(fieldErrors);
+        org.mockito.Mockito.when(excepcion.getMessage()).thenReturn("Error de validación");
+        StepVerifier.create(globalExceptionHandler.procesarErroresValidacion(excepcion, exchange))
+            .expectNextMatches(errorResponse -> {
+                assertThat(errorResponse.getCodigo()).isEqualTo("VALIDACION_FALLIDA");
+                assertThat(errorResponse.getMensaje()).isEqualTo("Mensaje de error de validación");
+                assertThat(errorResponse.getPath()).isEqualTo("/api/v1/solicitudes");
+                assertThat(errorResponse.getTimestamp()).isNotNull();
+                return true;
+            })
+            .verifyComplete();
+    }
 }

@@ -21,4 +21,5 @@ public class TipoPrestamo {
     private Integer plazoMaximoMeses;
     private BigDecimal tasaInteres;
     private Boolean activo;
+    private Boolean validacionAutomatica;
 }
