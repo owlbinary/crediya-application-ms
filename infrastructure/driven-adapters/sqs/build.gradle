@@ -2,4 +2,6 @@ dependencies {
     implementation project(':model')
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.projectlombok:lombok'
+    implementation 'software.amazon.awssdk:sqs:2.21.42'
+    implementation 'io.projectreactor:reactor-core'
 }

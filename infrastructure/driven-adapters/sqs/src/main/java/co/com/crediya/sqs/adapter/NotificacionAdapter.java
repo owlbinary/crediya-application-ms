@@ -9,17 +9,21 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
+import software.amazon.awssdk.services.sqs.SqsAsyncClient;
+import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 import java.util.List;
 
 @Slf4j
 @Component
 public class NotificacionAdapter implements NotificacionGateway {
-    // private final SqsAsyncClient sqsAsyncClient;
+    private final SqsAsyncClient sqsAsyncClient;
     private final String queueUrl;
 
-    public NotificacionAdapter(@Value("${aws.sqs.queueUrl}") String queueUrl) {
+    public NotificacionAdapter(
+            SqsAsyncClient sqsAsyncClient,
+            @Value("${aws.sqs.queueUrl}") String queueUrl) {
         this.queueUrl = queueUrl;
-        // this.sqsAsyncClient = sqsAsyncClient; //TODO
+        this.sqsAsyncClient = sqsAsyncClient;
     }
 
     @Override
@@ -30,8 +34,16 @@ public class NotificacionAdapter implements NotificacionGateway {
     public Mono<Void> enviarNotificacionEstado(Solicitud solicitud, String email, String justificacion, List<PlanPagoCuota> planPago) {
         String mensaje = construirMensaje(solicitud, email, justificacion, planPago);
         log.info("Enviando mensaje a SQS para solicitud {}: {}", solicitud.getId(), mensaje);
-        // return Mono.fromFuture(() -> sqsAsyncClient.sendMessage(...))
-        return Mono.fromRunnable(() -> log.debug("Mensaje enviado a SQS: {}", mensaje));
+        
+        SendMessageRequest sendMessageRequest = SendMessageRequest.builder()
+                .queueUrl(queueUrl)
+                .messageBody(mensaje)
+                .build();
+                
+        return Mono.fromFuture(sqsAsyncClient.sendMessage(sendMessageRequest))
+                .doOnSuccess(response -> log.info("Mensaje enviado a SQS con ID: {}", response.messageId()))
+                .doOnError(e -> log.error("Error al enviar mensaje a SQS: {}", e.getMessage(), e))
+                .then();
     }
 
     String construirMensaje(Solicitud solicitud, String email, String justificacion, List<PlanPagoCuota> planPago) {
@@ -72,8 +84,16 @@ public class NotificacionAdapter implements NotificacionGateway {
     public Mono<Void> enviarValidacionAutomaticaSolicitud(Solicitud solicitud, DetalleUsuario detalleUsuario, TipoPrestamo tipoPrestamo, String authorizationToken) {
         String mensaje = construirMensajeValidacionAutomatica(solicitud, detalleUsuario, tipoPrestamo, authorizationToken);
         log.info("Enviando mensaje de validación automática a SQS para solicitud {}: {}", solicitud.getId(), mensaje);
-        // return Mono.fromFuture(() -> sqsAsyncClient.sendMessage(...))
-        return Mono.fromRunnable(() -> log.debug("Mensaje de validación automática enviado a SQS: {}", mensaje));
+        
+        SendMessageRequest sendMessageRequest = SendMessageRequest.builder()
+                .queueUrl(queueUrl)
+                .messageBody(mensaje)
+                .build();
+                
+        return Mono.fromFuture(sqsAsyncClient.sendMessage(sendMessageRequest))
+                .doOnSuccess(response -> log.info("Mensaje de validación automática enviado a SQS con ID: {}", response.messageId()))
+                .doOnError(e -> log.error("Error al enviar mensaje de validación automática a SQS: {}", e.getMessage(), e))
+                .then();
     }
 
     private String construirMensajeValidacionAutomatica(Solicitud solicitud, DetalleUsuario usuario, TipoPrestamo tipoPrestamo, String authorizationToken) {

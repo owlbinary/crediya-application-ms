@@ -55,5 +55,9 @@ jwt:
   expiration: ${JWT_EXPIRATION}
 
 aws:
+  region: ${AWS_REGION:us-east-1}
+  credentials:
+    accessKey: ${AWS_ACCESS_KEY_ID}
+    secretKey: ${AWS_SECRET_ACCESS_KEY}
   sqs:
     queueUrl: ${AWS_SQS_QUEUE_URL}
