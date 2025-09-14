@@ -9,6 +9,7 @@ import co.com.crediya.model.gateway.ValidacionDocumentoGateway;
 import co.com.crediya.usecase.listarsolicitudes.ListarSolicitudesUseCase;
 import co.com.crediya.usecase.registrarsolicitud.RegistrarSolicitudUseCase;
 import co.com.crediya.model.gateway.NotificacionGateway;
+import co.com.crediya.model.gateway.DebtCapacityEventGateway;
 import co.com.crediya.usecase.actualizarestadosolicitud.ActualizarEstadoSolicitudUseCase;
 
 /**
@@ -23,8 +24,9 @@ public class UseCaseConfig {
             SolicitudGateway solicitudRepository,
             ValidacionDocumentoGateway validacionDocumentoGateway,
             TipoPrestamoGateway tipoPrestamoGateway,
-            NotificacionGateway notificacionGateway) {
-        return new RegistrarSolicitudUseCase(solicitudRepository, validacionDocumentoGateway, tipoPrestamoGateway, notificacionGateway);
+            NotificacionGateway notificacionGateway,
+            DebtCapacityEventGateway debtCapacityEventGateway) {
+        return new RegistrarSolicitudUseCase(solicitudRepository, validacionDocumentoGateway, tipoPrestamoGateway, notificacionGateway, debtCapacityEventGateway);
     }
     
     @Bean

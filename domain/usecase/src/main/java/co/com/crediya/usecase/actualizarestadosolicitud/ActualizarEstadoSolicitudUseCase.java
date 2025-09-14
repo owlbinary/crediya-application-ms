@@ -43,6 +43,16 @@ public class ActualizarEstadoSolicitudUseCase {
                     }
                     solicitud.setEstado(estado);
                     solicitud.setFechaActualizacion(java.time.LocalDateTime.now());
+                    
+                    if (authorizationToken == null || authorizationToken.trim().isEmpty()) {
+                        return solicitudGateway.actualizar(solicitud)
+                                .flatMap(s -> notificacionGateway
+                                        .enviarNotificacionEstado(s, solicitud.getEmail(), justificacion, planPago)
+                                        .thenReturn(s))
+                                .onErrorResume(e -> Mono.error(
+                                        new NotificacionEstadoException("Error notificando al solicitante")));
+                    }
+                    
                     return validacionDocumentoGateway
                             .obtenerDetalleUsuario(solicitud.getDocumentoIdentidad(), authorizationToken)
                             .flatMap(detalleUsuario -> solicitudGateway.actualizar(solicitud)

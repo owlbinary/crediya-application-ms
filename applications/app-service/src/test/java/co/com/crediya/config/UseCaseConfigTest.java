@@ -4,6 +4,7 @@ import co.com.crediya.model.gateway.SolicitudGateway;
 import co.com.crediya.model.gateway.NotificacionGateway;
 import co.com.crediya.model.gateway.TipoPrestamoGateway;
 import co.com.crediya.model.gateway.ValidacionDocumentoGateway;
+import co.com.crediya.model.gateway.DebtCapacityEventGateway;
 import co.com.crediya.usecase.listarsolicitudes.ListarSolicitudesUseCase;
 import co.com.crediya.usecase.registrarsolicitud.RegistrarSolicitudUseCase;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +32,9 @@ class UseCaseConfigTest {
         @Mock
         private NotificacionGateway notificacionGateway;
 
+        @Mock
+        private DebtCapacityEventGateway debtCapacityEventGateway;
+
         private UseCaseConfig useCaseConfig;
 
         @BeforeEach
@@ -42,7 +46,7 @@ class UseCaseConfigTest {
         @DisplayName("Debe crear bean RegistrarSolicitudUseCase correctamente")
         void debeCrearBeanRegistrarSolicitudUseCaseCorrectamente() {
                 RegistrarSolicitudUseCase useCase = useCaseConfig.registrarSolicitudUseCase(
-                                solicitudGateway, validacionDocumentoGateway, tipoPrestamoGateway, notificacionGateway);
+                                solicitudGateway, validacionDocumentoGateway, tipoPrestamoGateway, notificacionGateway, debtCapacityEventGateway);
 
                 assertThat(useCase)
                                 .isNotNull()
@@ -53,9 +57,9 @@ class UseCaseConfigTest {
         @DisplayName("Debe crear instancias diferentes en llamadas múltiples")
         void debeCrearInstanciasDiferentesEnLladasMultiples() {
                 RegistrarSolicitudUseCase useCase1 = useCaseConfig.registrarSolicitudUseCase(
-                                solicitudGateway, validacionDocumentoGateway, tipoPrestamoGateway, notificacionGateway);
+                                solicitudGateway, validacionDocumentoGateway, tipoPrestamoGateway, notificacionGateway, debtCapacityEventGateway);
                 RegistrarSolicitudUseCase useCase2 = useCaseConfig.registrarSolicitudUseCase(
-                                solicitudGateway, validacionDocumentoGateway, tipoPrestamoGateway, notificacionGateway);
+                                solicitudGateway, validacionDocumentoGateway, tipoPrestamoGateway, notificacionGateway, debtCapacityEventGateway);
 
                 assertThat(useCase1)
                                 .isNotNull()
@@ -92,7 +96,7 @@ class UseCaseConfigTest {
         @DisplayName("Debe inyectar correctamente las dependencias en RegistrarSolicitudUseCase")
         void debeInyectarCorrectamenteLasDependenciasEnRegistrarSolicitudUseCase() {
                 RegistrarSolicitudUseCase useCase = useCaseConfig.registrarSolicitudUseCase(
-                                solicitudGateway, validacionDocumentoGateway, tipoPrestamoGateway, notificacionGateway);
+                                solicitudGateway, validacionDocumentoGateway, tipoPrestamoGateway, notificacionGateway, debtCapacityEventGateway);
 
                 assertThat(useCase).isNotNull();
 

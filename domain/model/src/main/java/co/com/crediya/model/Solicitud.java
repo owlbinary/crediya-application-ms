@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 public class Solicitud {
     private String id;
     private String documentoIdentidad;
+    private String email;
     private BigDecimal monto;
     private Integer plazo;
     private String tipoPrestamoId;
@@ -31,19 +32,21 @@ public class Solicitud {
      * Factory method para crear una nueva solicitud en estado inicial.
      * 
      * @param documentoIdentidad Documento de identidad del solicitante
+     * @param email Email del solicitante
      * @param monto Monto solicitado
      * @param plazo Plazo en meses
      * @param tipoPrestamoId Tipo de préstamo solicitado
      * @return Nueva instancia de Solicitud
      * @throws DatosInvalidosException si los datos no cumplen las reglas de negocio
      */
-    public static Solicitud crearNueva(String documentoIdentidad, BigDecimal monto, 
+    public static Solicitud crearNueva(String documentoIdentidad, String email, BigDecimal monto, 
                                       Integer plazo, String tipoPrestamoId) {
-        validarDatosNegocio(documentoIdentidad, monto, plazo, tipoPrestamoId);
+        validarDatosNegocio(documentoIdentidad, email, monto, plazo, tipoPrestamoId);
         
         LocalDateTime ahora = LocalDateTime.now();
         return Solicitud.builder()
             .documentoIdentidad(documentoIdentidad)
+            .email(email)
             .monto(monto)
             .plazo(plazo)
             .tipoPrestamoId(tipoPrestamoId)
@@ -58,19 +61,21 @@ public class Solicitud {
      * Útil para validación temprana en casos de uso.
      * 
      * @param documentoIdentidad Documento de identidad del solicitante
+     * @param email Email del solicitante
      * @param monto Monto solicitado
      * @param plazo Plazo en meses
      * @param tipoPrestamoId Tipo de préstamo solicitado
      * @throws DatosInvalidosException si los datos no cumplen las reglas de negocio
      */
-    public static void validarDatosParaCreacion(String documentoIdentidad, BigDecimal monto, 
+    public static void validarDatosParaCreacion(String documentoIdentidad, String email, BigDecimal monto, 
                                                Integer plazo, String tipoPrestamoId) {
-        validarDatosNegocio(documentoIdentidad, monto, plazo, tipoPrestamoId);
+        validarDatosNegocio(documentoIdentidad, email, monto, plazo, tipoPrestamoId);
     }
     
-    private static void validarDatosNegocio(String documentoIdentidad, BigDecimal monto, 
+    private static void validarDatosNegocio(String documentoIdentidad, String email, BigDecimal monto, 
                                            Integer plazo, String tipoPrestamoId) {
         validarDocumentoIdentidad(documentoIdentidad);
+        validarEmail(email);
         validarMonto(monto);
         validarPlazo(plazo);
         validarTipoPrestamoId(tipoPrestamoId);
@@ -79,6 +84,15 @@ public class Solicitud {
     private static void validarDocumentoIdentidad(String documentoIdentidad) {
         if (documentoIdentidad == null || documentoIdentidad.trim().isEmpty()) {
             throw new DatosInvalidosException("Documento de identidad es obligatorio");
+        }
+    }
+    
+    private static void validarEmail(String email) {
+        if (email == null || email.trim().isEmpty()) {
+            throw new DatosInvalidosException("Email es obligatorio");
+        }
+        if (!email.contains("@") || !email.contains(".")) {
+            throw new DatosInvalidosException("Email debe tener un formato válido");
         }
     }
     

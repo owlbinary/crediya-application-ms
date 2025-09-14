@@ -1,5 +1,6 @@
 package co.com.crediya.config;
 
+import co.com.crediya.model.gateway.DebtCapacityEventGateway;
 import co.com.crediya.model.gateway.SolicitudGateway;
 import co.com.crediya.model.gateway.NotificacionGateway;
 import co.com.crediya.model.gateway.TipoPrestamoGateway;
@@ -31,6 +32,9 @@ class UseCasesConfigTest {
     @Mock
     private TipoPrestamoGateway tipoPrestamoGateway;
 
+    @Mock
+    private DebtCapacityEventGateway debtCapacityEventGateway;
+
     private AnnotationConfigApplicationContext context;
 
     @BeforeEach
@@ -42,6 +46,7 @@ class UseCasesConfigTest {
     context.getBeanFactory().registerSingleton("validacionDocumentoGateway", validacionDocumentoGateway);
     context.getBeanFactory().registerSingleton("tipoPrestamoGateway", tipoPrestamoGateway);
     context.getBeanFactory().registerSingleton("notificacionGateway", notificacionGateway);
+    context.getBeanFactory().registerSingleton("debtCapacityEventGateway", debtCapacityEventGateway);
         
         context.refresh();
     }

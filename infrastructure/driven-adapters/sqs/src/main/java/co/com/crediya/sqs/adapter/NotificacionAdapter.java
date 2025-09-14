@@ -17,12 +17,15 @@ import java.util.List;
 @Component
 public class NotificacionAdapter implements NotificacionGateway {
     private final SqsAsyncClient sqsAsyncClient;
-    private final String queueUrl;
+    private final String notificacionesQueueUrl;
+    private final String capacidadEndeudamientoQueueUrl;
 
     public NotificacionAdapter(
             SqsAsyncClient sqsAsyncClient,
-            @Value("${aws.sqs.queueUrl}") String queueUrl) {
-        this.queueUrl = queueUrl;
+            @Value("${aws.sqs.notificaciones.queueUrl}") String notificacionesQueueUrl,
+            @Value("${aws.sqs.capacidad-endeudamiento.queueUrl}") String capacidadEndeudamientoQueueUrl) {
+        this.notificacionesQueueUrl = notificacionesQueueUrl;
+        this.capacidadEndeudamientoQueueUrl = capacidadEndeudamientoQueueUrl;
         this.sqsAsyncClient = sqsAsyncClient;
     }
 
@@ -36,7 +39,7 @@ public class NotificacionAdapter implements NotificacionGateway {
         log.info("Enviando mensaje a SQS para solicitud {}: {}", solicitud.getId(), mensaje);
         
         SendMessageRequest sendMessageRequest = SendMessageRequest.builder()
-                .queueUrl(queueUrl)
+                .queueUrl(notificacionesQueueUrl)
                 .messageBody(mensaje)
                 .build();
                 
@@ -86,7 +89,7 @@ public class NotificacionAdapter implements NotificacionGateway {
         log.info("Enviando mensaje de validación automática a SQS para solicitud {}: {}", solicitud.getId(), mensaje);
         
         SendMessageRequest sendMessageRequest = SendMessageRequest.builder()
-                .queueUrl(queueUrl)
+                .queueUrl(capacidadEndeudamientoQueueUrl)
                 .messageBody(mensaje)
                 .build();
                 

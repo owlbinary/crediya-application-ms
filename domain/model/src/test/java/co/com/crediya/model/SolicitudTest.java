@@ -14,12 +14,13 @@ class SolicitudTest {
     @Test
     void deberiaCrearNuevaSolicitudConEstadoPendienteRevision() {
         String documentoIdentidad = "12345678";
+        String email = "test@example.com";
         BigDecimal monto = new BigDecimal("1000000");
         Integer plazo = 12;
         String tipoPrestamoId = "1";
         LocalDateTime antes = LocalDateTime.now().minusSeconds(1);
         
-        Solicitud solicitud = Solicitud.crearNueva(documentoIdentidad, monto, plazo, tipoPrestamoId);
+        Solicitud solicitud = Solicitud.crearNueva(documentoIdentidad, email, monto, plazo, tipoPrestamoId);
         
         assertThat(solicitud).isNotNull();
         assertThat(solicitud.getDocumentoIdentidad()).isEqualTo(documentoIdentidad);
@@ -37,7 +38,7 @@ class SolicitudTest {
 
     @Test
     void deberiaRechazarSolicitudConParametrosNulos() {
-        assertThatThrownBy(() -> Solicitud.crearNueva(null, null, null, null))
+        assertThatThrownBy(() -> Solicitud.crearNueva(null, null, null, null, null))
             .isInstanceOf(DatosInvalidosException.class)
             .hasMessageContaining("Documento de identidad es obligatorio");
     }
@@ -70,7 +71,7 @@ class SolicitudTest {
 
     @Test
     void deberiaPermitirModificacionConToBuilder() {
-        Solicitud original = Solicitud.crearNueva("12345678", new BigDecimal("1000000"), 12, "1");
+        Solicitud original = Solicitud.crearNueva("12345678", "test@example.com", new BigDecimal("1000000"), 12, "1");
         
         Solicitud modificada = original.toBuilder()
             .estado(EstadoSolicitud.APROBADO)
@@ -132,7 +133,7 @@ class SolicitudTest {
 
     @Test
     void deberiaGenerarToStringCorrectamente() {
-        Solicitud solicitud = Solicitud.crearNueva("12345678", new BigDecimal("1000000"), 12, "1");
+        Solicitud solicitud = Solicitud.crearNueva("12345678", "test@example.com", new BigDecimal("1000000"), 12, "1");
         
         String toString = solicitud.toString();
         
@@ -147,7 +148,7 @@ class SolicitudTest {
 
     @Test
     void deberiaRechazarDocumentoVacio() {
-        assertThatThrownBy(() -> Solicitud.crearNueva("   ", new BigDecimal("1000000"), 12, "1"))
+        assertThatThrownBy(() -> Solicitud.crearNueva("   ", "test@example.com", new BigDecimal("1000000"), 12, "1"))
             .isInstanceOf(DatosInvalidosException.class)
             .hasMessageContaining("Documento de identidad es obligatorio");
     }
@@ -156,14 +157,14 @@ class SolicitudTest {
     void deberiaRechazarMontoNegativo() {
         BigDecimal montoNegativo = new BigDecimal("-1000");
         
-        assertThatThrownBy(() -> Solicitud.crearNueva("12345678", montoNegativo, 12, "1"))
+        assertThatThrownBy(() -> Solicitud.crearNueva("12345678", "test@example.com", montoNegativo, 12, "1"))
             .isInstanceOf(DatosInvalidosException.class)
             .hasMessageContaining("El monto debe ser mayor a cero");
     }
 
     @Test
     void deberiaRechazarPlazoNegativo() {
-        assertThatThrownBy(() -> Solicitud.crearNueva("12345678", new BigDecimal("1000000"), -1, "1"))
+        assertThatThrownBy(() -> Solicitud.crearNueva("12345678", "test@example.com", new BigDecimal("1000000"), -1, "1"))
             .isInstanceOf(DatosInvalidosException.class)
             .hasMessageContaining("El plazo en meses debe ser mayor a cero");
     }

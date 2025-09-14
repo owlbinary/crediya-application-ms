@@ -1,11 +1,13 @@
 package co.com.crediya.usecase.registrarsolicitud;
 
 import co.com.crediya.model.exception.DocumentoNoValidoException;
+import co.com.crediya.model.exception.DatosInvalidosException;
 import co.com.crediya.model.exception.TipoPrestamoNoExisteException;
 import co.com.crediya.model.gateway.SolicitudGateway;
 import co.com.crediya.model.gateway.TipoPrestamoGateway;
 import co.com.crediya.model.gateway.ValidacionDocumentoGateway;
 import co.com.crediya.model.gateway.NotificacionGateway;
+import co.com.crediya.model.gateway.DebtCapacityEventGateway;
 import co.com.crediya.model.EstadoSolicitud;
 import co.com.crediya.model.Solicitud;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ public class RegistrarSolicitudUseCase {
     private final ValidacionDocumentoGateway validacionDocumentoGateway;
     private final TipoPrestamoGateway tipoPrestamoGateway;
     private final NotificacionGateway notificacionGateway;
+    private final DebtCapacityEventGateway debtCapacityEventGateway;
 
     private static final EstadoSolicitud ESTADO_APROBADO = EstadoSolicitud.APROBADO;
 
@@ -40,31 +43,37 @@ public class RegistrarSolicitudUseCase {
     public Mono<Solicitud> ejecutar(String documentoIdentidad, BigDecimal monto,
                                    Integer plazo, String tipoPrestamoId, String authorizationToken) {
 
-        try {
-            Solicitud.validarDatosParaCreacion(documentoIdentidad, monto, plazo, tipoPrestamoId);
-        } catch (Exception e) {
-            return Mono.error(e);
+        if (tipoPrestamoId == null) {
+            return Mono.error(new DatosInvalidosException("El tipo de préstamo no puede ser nulo"));
         }
-
         return validarDocumentoEnSistema(documentoIdentidad, authorizationToken)
             .then(validarDisponibilidadTipoPrestamo(tipoPrestamoId))
-            .then(calcularDeudaTotalMensual(documentoIdentidad))
-            .flatMap(deudaTotalMensual -> {
-                Solicitud nueva = Solicitud.crearNueva(documentoIdentidad, monto, plazo, tipoPrestamoId);
-                nueva.setDeudaTotalMensual(deudaTotalMensual);
-                return solicitudRepository.guardar(nueva);
-            })
-            .flatMap(solicitud ->
-                tipoPrestamoGateway.buscarPorId(tipoPrestamoId)
-                    .flatMap(tipoPrestamo -> {
-                        if (Boolean.TRUE.equals(tipoPrestamo.getValidacionAutomatica())) {
-                            return validacionDocumentoGateway.obtenerDetalleUsuario(documentoIdentidad, authorizationToken)
-                                .flatMap(detalleUsuario -> notificacionGateway.enviarValidacionAutomaticaSolicitud(solicitud, detalleUsuario, tipoPrestamo, authorizationToken))
-                                .thenReturn(solicitud);
-                        }
-                        return Mono.just(solicitud);
+            .then(validacionDocumentoGateway.obtenerDetalleUsuario(documentoIdentidad, authorizationToken))
+            .flatMap(detalleUsuario -> {
+                try {
+                    Solicitud.validarDatosParaCreacion(documentoIdentidad, detalleUsuario.getEmail(), monto, plazo, tipoPrestamoId);
+                } catch (Exception e) {
+                    return Mono.error(e);
+                }
+                
+                return calcularDeudaTotalMensual(documentoIdentidad)
+                    .flatMap(deudaTotalMensual -> {
+                        Solicitud nueva = Solicitud.crearNueva(documentoIdentidad, detalleUsuario.getEmail(), monto, plazo, tipoPrestamoId);
+                        nueva.setDeudaTotalMensual(deudaTotalMensual);
+                        return solicitudRepository.guardar(nueva);
                     })
-            );
+                    .flatMap(solicitud ->
+                        tipoPrestamoGateway.buscarPorId(tipoPrestamoId)
+                            .flatMap(tipoPrestamo -> {
+                                if (Boolean.TRUE.equals(tipoPrestamo.getValidacionAutomatica())) {
+                                    return debtCapacityEventGateway.enviarEvaluacionCapacidadEndeudamiento(solicitud, detalleUsuario, tipoPrestamo)
+                                        .then(notificacionGateway.enviarValidacionAutomaticaSolicitud(solicitud, detalleUsuario, tipoPrestamo, authorizationToken))
+                                        .thenReturn(solicitud);
+                                }
+                                return Mono.just(solicitud);
+                            })
+                    );
+            });
     }
     
     private Mono<Void> validarDocumentoEnSistema(String documentoIdentidad, String authorizationToken) {

@@ -16,13 +16,14 @@ public interface SolicitudEntityMapper {
     @Mapping(target = "fechaCreacion", source = "fechaSolicitud")
     @Mapping(target = "fechaActualizacion", source = "fechaActualizacion")
     @Mapping(target = "deudaTotalMensual", source = "deudaTotalMensualSolicitudesAprobadas")
+    @Mapping(target = "email", source = "email")
     Solicitud toDomain(SolicitudEntity entidad);
 
     @Mapping(target = "idEstado", source = "estado", qualifiedByName = "domainEstadoToEntityEstado")
     @Mapping(target = "idTipoPrestamo", source = "tipoPrestamoId", qualifiedByName = "domainTipoPrestamoToEntityTipoPrestamo")
     @Mapping(target = "fechaSolicitud", source = "fechaCreacion")
     @Mapping(target = "fechaActualizacion", source = "fechaActualizacion")
-    @Mapping(target = "email", constant = "temp@example.com")
+    @Mapping(target = "email", source = "email")
     @Mapping(target = "observaciones", ignore = true)
     @Mapping(target = "deudaTotalMensualSolicitudesAprobadas", source = "deudaTotalMensual")
     SolicitudEntity toEntity(Solicitud solicitud);

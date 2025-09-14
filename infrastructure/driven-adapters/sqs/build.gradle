@@ -1,7 +1,16 @@
 dependencies {
     implementation project(':model')
+    implementation project(':usecase')
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.projectlombok:lombok'
     implementation 'software.amazon.awssdk:sqs:2.21.42'
     implementation 'io.projectreactor:reactor-core'
+    implementation platform('io.awspring.cloud:spring-cloud-aws-dependencies:3.2.1')
+    implementation 'io.awspring.cloud:spring-cloud-aws-sqs'
+    implementation 'io.awspring.cloud:spring-cloud-aws-starter-sqs'
+    
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    implementation 'org.springframework:spring-messaging'
+    implementation 'org.springframework:spring-context'
 }

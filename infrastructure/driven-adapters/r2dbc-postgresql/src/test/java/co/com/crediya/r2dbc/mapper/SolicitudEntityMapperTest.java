@@ -55,6 +55,7 @@ class SolicitudEntityMapperTest {
         Solicitud domain = Solicitud.builder()
             .id("456")
             .documentoIdentidad("87654321")
+            .email("temp@example.com")
             .monto(new BigDecimal("2000000"))
             .plazo(36)
             .tipoPrestamoId("3")
