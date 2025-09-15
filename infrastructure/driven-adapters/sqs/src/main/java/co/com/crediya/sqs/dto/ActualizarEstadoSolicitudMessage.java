@@ -43,6 +43,15 @@ public class ActualizarEstadoSolicitudMessage {
         
         @JsonProperty("origen")
         private String origen;
+        
+        @JsonProperty("monto")
+        private String monto;
+        
+        @JsonProperty("tasaInteres")
+        private String tasaInteres;
+        
+        @JsonProperty("plazo")
+        private Integer plazo;
     }
     
     @Data

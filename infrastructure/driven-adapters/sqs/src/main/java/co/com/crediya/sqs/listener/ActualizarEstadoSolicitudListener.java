@@ -41,6 +41,16 @@ public class ActualizarEstadoSolicitudListener {
 
             List<PlanPagoCuota> planPagoDominio = convertirPlanPago(params.getPlanPago());
 
+            if (params.getMonto() != null) {
+                log.info("Actualizando solicitud {} con monto: {}", params.getSolicitudId(), params.getMonto());
+            }
+            if (params.getTasaInteres() != null) {
+                log.info("Tasa de interés para solicitud {}: {}", params.getSolicitudId(), params.getTasaInteres());
+            }
+            if (params.getPlazo() != null) {
+                log.info("Plazo para solicitud {}: {} meses", params.getSolicitudId(), params.getPlazo());
+            }
+
             actualizarEstadoSolicitudUseCase.ejecutar(
                 params.getSolicitudId(),
                 params.getNuevoEstado(), 
