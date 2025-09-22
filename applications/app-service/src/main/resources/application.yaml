@@ -1,14 +1,14 @@
 server:
   port: ${SERVER_PORT:8080}
-  servlet:
-    context-path: /solicitud
 
 spring:
+  webflux:
+    base-path: /solicitud
   application:
     name: application-service
   
   r2dbc:
-    url: r2dbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    url: r2dbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?sslMode=require
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     pool:
@@ -18,6 +18,8 @@ spring:
       validation-query: SELECT 1
 
 management:
+  server:
+    base-path: /actuator
   endpoints:
     web:
       exposure:
@@ -56,9 +58,6 @@ jwt:
 
 aws:
   region: ${AWS_REGION}
-  credentials:
-    accessKey: ${AWS_ACCESS_KEY_ID}
-    secretKey: ${AWS_SECRET_ACCESS_KEY}
   sqs:
     notificaciones:
       queueUrl: ${AWS_SQS_NOTIFICACIONES_QUEUE_URL}
